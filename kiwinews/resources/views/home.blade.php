@@ -22,7 +22,7 @@
                 </span>
             </div>
 
-            <!-- Right: Exact BSP Exchange Rate Rotator & Livestream Badge -->
+            Right: Exact BSP Exchange Rate Rotator & Livestream Badge
             <div class="flex items-center space-x-4">
                 <div class="flex items-center space-x-2 bg-white px-3 py-1 rounded border border-gray-300 shadow-2xs">
                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">BSP FX:</span>
@@ -30,15 +30,15 @@
                         <!-- Dynamic JS will inject here -->
                     </div>
                 </div>
-                <span class="bg-red-600 text-white px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                <!-- <span class="bg-red-600 text-white px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Livestream
-                </span>
+                </span> -->
             </div>
 
         </div>
     </div>
 
-    <!-- MAIN HEADER -->
+<!-- MAIN HEADER -->
     <header class="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
             
@@ -51,15 +51,24 @@
                 </div>
             </a>
 
-            <!-- Search Bar -->
-            <form action="/" method="GET" class="flex items-center w-full md:w-96">
-                <div class="relative w-full">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Maghanap ng balita, paksa..." class="w-full bg-gray-50 border border-gray-300 rounded-full py-1.5 pl-4 pr-10 text-sm focus:outline-none focus:border-emerald-700">
-                    <button type="submit" class="absolute right-3 top-2 text-gray-500 hover:text-emerald-700">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </button>
-                </div>
-            </form>
+            <!-- Search Bar and Admin Login Container -->
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <!-- Search Bar -->
+                <form action="/" method="GET" class="flex items-center w-full md:w-96">
+                    <div class="relative w-full">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Maghanap ng balita, paksa..." class="w-full bg-gray-50 border border-gray-300 rounded-full py-1.5 pl-4 pr-10 text-sm focus:outline-none focus:border-emerald-700">
+                        <button type="submit" class="absolute right-3 top-2 text-gray-500 hover:text-emerald-700">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Admin Login Button -->
+                <a href="{{ route('admin.login') }}" class="bg-gray-100 hover:bg-emerald-700 hover:text-white text-gray-700 border border-gray-300 rounded-full py-1.5 px-4 text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap shadow-2xs">
+                    <i class="fa-solid fa-lock text-[10px]"></i>
+                    <span>Admin</span>
+                </a>
+            </div>
         </div>
 
         <!-- NAVIGATION -->
@@ -404,6 +413,8 @@
     <!-- FOOTER -->
     <footer class="bg-gray-100 text-gray-700 py-10 border-t border-gray-200 text-sm">
         <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+
+        
             
             <!-- Col 1: About -->
             <div>
