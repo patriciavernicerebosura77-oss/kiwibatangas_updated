@@ -2,73 +2,42 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Article;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 
 class HomeController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Featured Story (May maganda at kaugnay na larawan)
-        $featuredStory = (object)[
-            'title' => 'Paghahanda para sa Bagong Taon at Turismo sa Batangas, Pinalalakas',
-            'excerpt' => 'Nagpatupad ng mga bagong programa ang pamahalaang panlalawigan upang mas mapaganda ang karanasan ng mga turista at makiisa ang lokal na komunidad.',
-            'category' => 'LOKAL',
-            'image_url' => 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
-            'published_at' => Carbon::now()->subHours(2),
-        ];
+        $query = Article::query();
 
-        // 2. Breaking News Ticker (Para sa gumagalaw na balita)
-        $breakingNews = collect([
-            (object)['title' => 'Lipa City ibinida ang pagpapalawak ng mga lokal na taniman ng kape at gulay'],
-            (object)['title' => 'Mga bakasyonista dagsa na sa mga kilalang pasyalan sa Sto. Tomas at Tanauan'],
-            (object)['title' => 'DOTr at lokal na pamahalaan tiniyak ang maayos na daloy ng trapiko ngayong linggo'],
+        // Kung may piniling category, salain iyon. Kung "Mga Balita" o walang pinili, halo-halo (lahat) ang lalabas.
+        if ($request->has('category') && $request->category != '' && $request->category != 'Mga Balita') {
+            $cat = $request->category;
+            if (strtolower($cat) == 'agriculture' || strtolower($cat) == 'agrikultura') {
+                $query->whereIn('category', ['Agriculture', 'Agrikultura']);
+            } else {
+                $query->where('category', $cat);
+            }
+        }
+
+        // Salain batay sa search keyword kung may in-type
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('body', 'like', "%{$search}%");
+            });
+        }
+
+        return view('home', [
+            // Ang Featured at Top Stories ay laging nakabase sa pinakabago (latest date/time) para sa homepage
+            'featuredStory' => Article::where('is_featured', true)->latest()->first() ?? Article::latest()->first(),
+            'topStories' => Article::where('is_top_story', true)->latest()->take(5)->get()->count() ? Article::where('is_top_story', true)->latest()->take(5)->get() : Article::latest()->take(5)->get(),
+            'breakingNews' => Article::where('is_breaking', true)->latest()->get()->count() ? Article::where('is_breaking', true)->latest()->get() : Article::latest()->take(5)->get(),
+            
+            // Ang mga balita sa ibaba ay naka-ayos nang sunod-sunod batay sa pinakabagong petsa at oras (latest)
+            'articles' => $query->latest()->paginate(8),
         ]);
-
-        // 3. Top Stories Sidebar (May magagandang litrato)
-        $topStories = collect([
-            (object)[
-                'title' => 'Kape ng Batangas, patuloy ang pag-akit sa mga mamimili sa iba’t ibang rehiyon',
-                'category' => 'NEGOSYO',
-                'image_url' => 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=150&q=80',
-                'published_at' => Carbon::now()->subHours(3),
-            ],
-            (object)[
-                'title' => 'Mga bagong small-to-medium enterprises sa probinsya, lumago ngayong taon',
-                'category' => 'EKONOMIYA',
-                'image_url' => 'https://images.unsplash.com/photo-1556742049-0a67d553c2a5?auto=format&fit=crop&w=150&q=80',
-                'published_at' => Carbon::now()->subHours(5),
-            ]
-        ]);
-
-        // 4. Articles Grid Section (Mga balita sa ibaba na may kaukulang pictures)
-        $articles = collect([
-            (object)[
-                'title' => 'Paggamit ng makabagong teknolohiya sa agrikultura, isinusulong sa mga magsasaka',
-                'category' => 'Agrikultura',
-                'image_url' => 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=400&q=80',
-                'published_at' => Carbon::now()->subHours(4),
-            ],
-            (object)[
-                'title' => 'Pista ng Sto. Tomas: Mga paghahanda at aktibidad, inilatag na ng lokal na pamunuan',
-                'category' => 'Kultura',
-                'image_url' => 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=400&q=80',
-                'published_at' => Carbon::now()->subHours(6),
-            ],
-            (object)[
-                'title' => 'Kabataang Batanguenyo, nagwagi sa isang pambansang tech innovation competition',
-                'category' => 'Tech & Innovation',
-                'image_url' => 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=400&q=80',
-                'published_at' => Carbon::now()->subDay(),
-            ],
-            (object)[
-                'title' => 'Patok ang mga lokal na lutuin at kakanin sa night market ng bayan',
-                'category' => 'Chismis',
-                'image_url' => 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80',
-                'published_at' => Carbon::now()->subDays(2),
-            ]
-        ]);
-
-        return view('home', compact('featuredStory', 'breakingNews', 'topStories', 'articles'));
     }
 }

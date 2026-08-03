@@ -19,9 +19,17 @@
             <p class="text-xs text-emerald-700 font-bold uppercase tracking-widest mt-1">Kiwi Batangas Digital News</p>
         </div>
 
+        <!-- Error Messages (Kung sakaling magkamali sa email o password) -->
+        @if ($errors->any())
+            <div class="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-xs font-bold">
+                {{ $errors->first() }}
+            </div>
+        @endif
+
         <!-- Login Card -->
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-8">
-            <form action="{{ route('admin.login.submit') }}" method="POST">
+            <!-- BINAGO MULA sa route('admin.login.submit') PATUNGONG route('login') -->
+            <form action="{{ route('login') }}" method="POST">
                 @csrf
                 
                 <!-- Email Field -->
@@ -31,7 +39,7 @@
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                             <i class="fa-solid fa-envelope text-xs"></i>
                         </span>
-                        <input type="email" name="email" required class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-emerald-700 transition" placeholder="admin@kiwibatangas.ph">
+                        <input type="email" name="email" value="{{ old('email') }}" required class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-emerald-700 transition" placeholder="admin@kiwibatangas.ph">
                     </div>
                 </div>
 
@@ -48,7 +56,7 @@
 
                 <!-- Remember Me & Forgot Password -->
                 <div class="flex items-center justify-between text-xs mb-6">
-                    <label class="flex items-center text-gray-600">
+                    <label class="flex items-center text-gray-600 cursor-pointer">
                         <input type="checkbox" name="remember" class="rounded border-gray-300 text-emerald-700 focus:ring-emerald-700 mr-2">
                         Tandaan Mo Ako
                     </label>
@@ -56,7 +64,7 @@
                 </div>
 
                 <!-- Submit Button -->
-                <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 px-4 rounded-lg shadow-sm transition duration-200 text-sm flex items-center justify-center gap-2">
+                <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 px-4 rounded-lg shadow-sm transition duration-200 text-sm flex items-center justify-center gap-2 cursor-pointer">
                     <span>Mag-login sa Admin</span>
                     <i class="fa-solid fa-arrow-right text-xs"></i>
                 </button>
