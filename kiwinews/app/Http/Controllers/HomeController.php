@@ -2,42 +2,64 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Article;
 use Illuminate\Http\Request;
+use App\Models\Article;
+use App\Models\Category;
 
 class HomeController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Article::query();
+        $search = $request->input('search');
+        $category = $request->input('category');
 
-        // Kung may piniling category, salain iyon. Kung "Mga Balita" o walang pinili, halo-halo (lahat) ang lalabas.
-        if ($request->has('category') && $request->category != '' && $request->category != 'Mga Balita') {
-            $cat = $request->category;
-            if (strtolower($cat) == 'agriculture' || strtolower($cat) == 'agrikultura') {
-                $query->whereIn('category', ['Agriculture', 'Agrikultura']);
-            } else {
-                $query->where('category', $cat);
-            }
-        }
+        // Breaking news
+        $breakingNews = Article::orderBy('created_at', 'desc')->take(5)->get();
 
-        // Salain batay sa search keyword kung may in-type
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
+        // Featured stories (kunin ang pinakabagong featured)
+        $featuredStoriesQuery = Article::where('is_featured', 1)->orderBy('created_at', 'desc');
+        $featuredStories = $featuredStoriesQuery->take(5)->get();
+        $featuredStory = $featuredStories->first();
+        $hasMoreFeatured = Article::where('is_featured', 1)->count() > 5;
+
+        // Top Stories - Awtomatikong Top 5 pinakapanood o pinakabinisita (Most Viewed)
+        $topStories = Article::orderBy('views', 'desc')->take(5)->get();
+
+        // Regular articles / Search / Category filter
+        $articlesQuery = Article::orderBy('created_at', 'desc');
+
+        // 1. I-apply ang Search filter kung mayroon man
+        if ($search) {
+            $articlesQuery->where(function($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('body', 'like', "%{$search}%");
+                  ->orWhere('body', 'like', "%{$search}%")
+                  ->orWhere('excerpt', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%");
             });
         }
 
-        return view('home', [
-            // Ang Featured at Top Stories ay laging nakabase sa pinakabago (latest date/time) para sa homepage
-            'featuredStory' => Article::where('is_featured', true)->latest()->first() ?? Article::latest()->first(),
-            'topStories' => Article::where('is_top_story', true)->latest()->take(5)->get()->count() ? Article::where('is_top_story', true)->latest()->take(5)->get() : Article::latest()->take(5)->get(),
-            'breakingNews' => Article::where('is_breaking', true)->latest()->get()->count() ? Article::where('is_breaking', true)->latest()->get() : Article::latest()->take(5)->get(),
-            
-            // Ang mga balita sa ibaba ay naka-ayos nang sunod-sunod batay sa pinakabagong petsa at oras (latest)
-            'articles' => $query->latest()->paginate(8),
-        ]);
+        // 2. I-apply ang Category filter kung may pinili (Maliban kung walang pinili o kaya ay 'All')
+        if ($category && $category != '' && $category != 'All') {
+            $articlesQuery->where('category', $category);
+        }
+
+        // 3. Logic para sa pagpapakita ng balita:
+        // Kung may ginawang SEARCH, O KAYA ay pinili ang 'All', O KAYA ay may piniling specific category,
+        // kunin na lahat nang walang limit/pagination para lumabas sabay-sabay at naka-latest sa itaas.
+        if ($search || ($category && $category != '')) {
+            $articles = $articlesQuery->get();
+        } else {
+            // Kung nasa mismong Homepage lamang (walang search at walang category)
+            $articles = $articlesQuery->paginate(8)->withQueryString();
+        }
+
+        return view('home', compact(
+            'breakingNews',
+            'featuredStory',
+            'featuredStories',
+            'hasMoreFeatured',
+            'topStories',
+            'articles'
+        ));
     }
 }

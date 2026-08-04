@@ -70,6 +70,9 @@
                 <form action="/" method="GET" class="flex items-center w-full md:w-80">
                     <div class="relative w-full">
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Maghanap ng balita, paksa..." class="w-full bg-gray-50 border border-gray-300 rounded-full py-1.5 pl-3.5 pr-9 text-sm focus:outline-none focus:border-emerald-700">
+                        @if(request('category'))
+                            <input type="hidden" name="category" value="{{ request('category') }}">
+                        @endif
                         <button type="submit" class="absolute right-3 top-2 text-gray-500 hover:text-emerald-700">
                             <i class="fa-solid fa-magnifying-glass text-sm"></i>
                         </button>
@@ -80,14 +83,14 @@
 
         <!-- DYNAMIC NAVIGATION BAR -->
         <div class="max-w-7xl mx-auto px-4 flex items-center space-x-2 overflow-x-auto py-2 text-sm font-bold">
-            <a href="{{ route('home') }}" class="px-3.5 py-1.5 rounded-full {{ request('category') == '' ? 'bg-emerald-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-emerald-100 hover:text-emerald-800' }} transition">Mga Balita</a>
+            <a href="{{ route('home', array_filter(['search' => request('search')])) }}" class="px-3.5 py-1.5 rounded-full {{ (!request('category') || request('category') == '') ? 'bg-emerald-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-emerald-100 hover:text-emerald-800' }} transition">Mga Balita</a>
             
             @php
                 $navCategories = \App\Models\Category::all();
             @endphp
 
             @foreach($navCategories as $cat)
-                <a href="{{ route('home', ['category' => $cat->name]) }}" class="px-3.5 py-1.5 rounded-full {{ request('category') == $cat->name ? 'bg-emerald-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-emerald-100 hover:text-emerald-800' }} transition">
+                <a href="{{ route('home', array_filter(['category' => $cat->name, 'search' => request('search')])) }}" class="px-3.5 py-1.5 rounded-full {{ request('category') == $cat->name ? 'bg-emerald-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-emerald-100 hover:text-emerald-800' }} transition">
                     {{ $cat->name }}
                 </a>
             @endforeach
@@ -143,174 +146,85 @@ document.addEventListener("DOMContentLoaded", function () {
     <!-- MAIN CONTAINER -->
     <main class="max-w-7xl mx-auto px-4 py-8 bg-white">
 
-       <!-- KUNG NASA "MGA BALITA" KA -->
-       @if(!request('category') || request('category') == '')
-       <div class="flex flex-col lg:flex-row gap-6 mb-8 scroll-fade">
-           <div class="w-full lg:w-2/3 bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col shadow-sm news-card self-start">
-               @if(isset($featuredStory) && $featuredStory)
-                   @if($featuredStory->image_url)
-                       <div class="relative w-full bg-gray-900 flex items-center justify-center overflow-hidden">
-                           <a href="{{ route('news.show', $featuredStory->id) }}" class="w-full flex justify-center">
-                               <img src="{{ $featuredStory->image_url }}" alt="Lead Story" class="w-full h-auto object-contain max-h-[450px]">
-                           </a>
-                           <span class="absolute top-4 left-4 bg-emerald-700 text-white text-xs font-bold uppercase px-2.5 py-1 rounded shadow-sm z-10">Featured</span>
-                       </div>
-                   @endif
-                   <div class="p-6">
-                       <div class="flex items-center gap-2 mb-1.5">
-                           <span class="text-xs font-bold text-emerald-700 uppercase tracking-wide">{{ $featuredStory->category }}</span>
-                           @if($featuredStory->published_at && \Carbon\Carbon::parse($featuredStory->published_at)->diffInHours(\Carbon\Carbon::now()) <= 24)
-                               <span class="bg-emerald-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse shadow-2xs">NEW</span>
-                           @endif
-                       </div>
-                       <h1 class="text-2xl md:text-3xl font-black text-gray-900 hover:text-emerald-700 transition mt-1 mb-2.5">
-                           <a href="{{ route('news.show', $featuredStory->id) }}">{{ $featuredStory->title }}</a>
-                       </h1>
-                       <p class="text-gray-700 text-sm md:text-base mb-4 leading-relaxed">{{ $featuredStory->excerpt }}</p>
-                       <div class="flex items-center justify-between">
-                           <span class="text-xs text-gray-500 flex items-center">
-                               <i class="fa-regular fa-clock mr-1.5"></i> {{ $featuredStory->published_at ? \Carbon\Carbon::parse($featuredStory->published_at)->setTimezone('Asia/Manila')->format('F j, Y - g:i A') : 'Just now' }}
-                           </span>
-                           <a href="{{ route('news.show', $featuredStory->id) }}" class="font-bold text-emerald-700 hover:underline flex items-center gap-1 text-xs">Basahin <i class="fa-solid fa-arrow-right text-[9px]"></i></a>
-                       </div>
-                   </div>
-               @else
-                   <div class="p-6 text-center text-gray-500">Wala pang tampok na balita.</div>
-               @endif
-           </div>
-
-           <!-- Sidebar para sa Mga Balita homepage -->
-           <div class="w-full lg:w-1/3 flex flex-col gap-6">
-               <div class="bg-white border border-amber-200 rounded-xl shadow-xs overflow-hidden news-card">
-                   <div class="bg-amber-50 px-4 py-2 border-b border-amber-100 flex justify-between items-center">
-                       <span class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-                           <i class="fa-solid fa-bullhorn text-amber-600"></i> Kiwi Partner Promo
-                       </span>
-                       <span class="text-[10px] bg-amber-200 text-amber-900 font-semibold px-2 py-0.5 rounded-full uppercase">Sponsored / Ad</span>
-                   </div>
-                   <div class="p-4">
-                       <div class="relative group overflow-hidden rounded-lg mb-3 bg-gray-100 aspect-video flex items-center justify-center">
-                           <img src="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=600&q=80" alt="Burger Promo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                           <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded">Limited Offer</span>
-                       </div>
-                       <h4 class="font-bold text-gray-900 text-sm mb-1 line-clamp-1 hover:text-emerald-700 transition-colors">Burger Bundle Special Deal!</h4>
-                       <p class="text-xs text-gray-700 mb-3 leading-relaxed">
-                           Gamitin ang promo code na <strong class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">KIWIBATANGAS</strong> para sa libreng delivery.
-                       </p>
-                       <a href="#" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg shadow-xs transition-all duration-200 flex items-center justify-center gap-2 group">
-                           <span>Alamin Pa</span>
-                           <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
-                       </a>
-                   </div>
-               </div>
-
-               <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm news-card">
-                   <h2 class="text-sm font-black border-b-2 border-emerald-700 pb-2 mb-3 uppercase tracking-wider text-gray-900 flex justify-between items-center">
-                       <span>Top Stories</span>
-                       <i class="fa-solid fa-bolt text-emerald-700"></i>
-                   </h2>
-                   <div class="divide-y divide-gray-100">
-                       @isset($topStories)
-                           @forelse($topStories as $story)
-                               <div class="py-2.5 first:pt-0 last:pb-0 flex items-center space-x-3">
-                                   @if($story->image_url)
-                                       <a href="{{ route('news.show', $story->id) }}">
-                                           <img src="{{ $story->image_url }}" class="w-12 h-12 object-cover rounded-md flex-shrink-0" alt="Thumbnail">
-                                       </a>
-                                   @endif
-                                   <div class="min-w-0 flex-1">
-                                       <div class="flex items-center gap-1.5">
-                                           <span class="text-[10px] font-bold text-emerald-700 uppercase">{{ $story->category }}</span>
-                                           @if($story->published_at && \Carbon\Carbon::parse($story->published_at)->diffInHours(\Carbon\Carbon::now()) <= 24)
-                                               <span class="bg-emerald-600 text-white text-[9px] font-black px-1 py-0.2 rounded uppercase tracking-wider">NEW</span>
-                                           @endif
-                                       </div>
-                                       <h3 class="font-bold text-xs text-gray-900 hover:text-emerald-700 transition line-clamp-2 leading-snug">
-                                           <a href="{{ route('news.show', $story->id) }}">{{ $story->title }}</a>
-                                       </h3>
-                                       <span class="text-[10px] text-gray-500 mt-0.5 block"><i class="fa-regular fa-clock mr-1"></i> {{ $story->published_at ? \Carbon\Carbon::parse($story->published_at)->setTimezone('Asia/Manila')->format('M j, Y - g:i A') : '' }}</span>
-                                   </div>
-                               </div>
-                           @empty
-                               <div class="py-2 text-xs text-gray-500 text-center">Walang top stories.</div>
-                           @endforelse
-                       @endisset
-                   </div>
-               </div>
-           </div>
-       </div>
-       @endif
-
-       <!-- KUNG NASA IBANG CATEGORIES KA -->
-       @if(request('category') && request('category') != '')
-       <div class="flex flex-col lg:flex-row gap-8">
+       <!-- KUNG MAY NAG-SEARCH O MAY PINILING CATEGORY -->
+       @if(request('search') || (request('category') && request('category') != ''))
+       <div class="flex flex-col lg:flex-row gap-8 mb-8 scroll-fade">
            
-           <!-- Left Content Grid -->
-           <div class="w-full lg:w-2/3 flex flex-col gap-8">
-               <section class="scroll-fade">
+<div class="w-full @if((request('category') && request('category') != 'All') || request('search')) lg:w-2/3 @else w-full @endif flex flex-col gap-8">               <section class="scroll-fade">
                    <div class="flex items-center justify-between border-b-2 border-emerald-700 pb-2 mb-6">
-                       <h2 class="text-2xl font-black uppercase text-emerald-900">
-                           Kategorya: {{ request('category') }}
-                       </h2>
-                       <!-- <a href="/" class="text-xs font-bold bg-gray-100 text-gray-700 px-3 py-1 rounded hover:bg-gray-200">I-reset ang Salain</a> -->
+                       <div>
+                           <p class="text-xs font-black uppercase tracking-wider text-gray-500">Resulta ng Salain</p>
+                           <h2 class="text-2xl font-black uppercase text-emerald-900 mt-1">
+                               @if(request('search') && request('category'))
+                                   Search: "{{ request('search') }}" sa Kategoryang "{{ request('category') }}"
+                               @elseif(request('search'))
+                                   Search: "{{ request('search') }}"
+                               @elseif(request('category') == 'All')
+                                   Lahat ng Balita
+                               @else
+                                   Kategorya: {{ request('category') }}
+                               @endif
+                           </h2>
+                       </div>
+                       <a href="/" class="text-xs font-bold bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition">I-reset ang Salain</a>
                    </div>
 
-                   <!-- Bento / Random Sizes Grid for Categories -->
-                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                       @forelse($articles as $index => $article)
-                           @php
-                               $isLarge = ($index % 3 == 0);
-                           @endphp
-
-                           <div class="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col shadow-sm news-card {{ $isLarge ? 'sm:col-span-2' : '' }}">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+                           @forelse($articles as $article)
+                           <div class="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col shadow-sm news-card">
                                @if($article->image_url)
-                                   <div class="overflow-hidden bg-gray-950 w-full flex items-center justify-center relative">
-                                       <a href="{{ route('news.show', $article->id) }}" class="w-full flex justify-center">
-                                           <img src="{{ $article->image_url }}" alt="Thumbnail" class="w-full h-auto object-contain max-h-[500px]">
+                                   <div class="w-full h-48 relative overflow-hidden">
+                                       <a href="{{ route('news.show', $article->id) }}" class="block w-full h-full">
+                                           <img src="{{ $article->image_url }}" alt="Thumbnail" class="w-full h-full object-cover">
                                        </a>
                                        <span class="absolute top-3 left-3 bg-emerald-700 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow z-10">{{ $article->category }}</span>
                                    </div>
                                @endif
-                               <div class="p-5 flex-1 flex flex-col justify-between">
+                               <div class="p-4 flex-1 flex flex-col justify-between">
                                    <div>
                                        <div class="flex items-center gap-2 mb-1">
                                            @if(!$article->image_url)
                                                <span class="text-xs font-bold text-emerald-700 uppercase">{{ $article->category }}</span>
                                            @endif
-                                           @if($article->published_at && \Carbon\Carbon::parse($article->published_at)->diffInHours(\Carbon\Carbon::now()) <= 24)
+                                           @if($article->created_at && \Carbon\Carbon::parse($article->created_at)->diffInHours(\Carbon\Carbon::now()) <= 24)
                                                <span class="bg-emerald-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse shadow-2xs">NEW</span>
                                            @endif
                                        </div>
-                                       <h3 class="font-black {{ $isLarge ? 'text-xl md:text-2xl' : 'text-base' }} text-gray-900 hover:text-emerald-700 transition leading-snug mt-1 mb-2">
+                                       <h3 class="font-bold text-base text-gray-900 hover:text-emerald-700 transition leading-snug mt-1 mb-2">
                                            <a href="{{ route('news.show', $article->id) }}">{{ $article->title }}</a>
                                        </h3>
-                                       <p class="text-xs md:text-sm text-gray-600 line-clamp-2 mb-4">
-                                           {{ $article->excerpt ?? Str::limit(strip_tags($article->body), 100) }}
+                                       <p class="text-xs text-gray-600 line-clamp-2 mb-4">
+                                           {{ $article->excerpt ?? Str::limit(strip_tags($article->body), 90) }}
                                        </p>
                                    </div>
                                    <div class="flex items-center justify-between pt-3 border-t border-gray-100 text-[11px] text-gray-500">
                                        <span class="flex items-center font-medium">
                                            <i class="fa-regular fa-clock text-emerald-700 mr-1.5"></i> 
-                                           {{ $article->published_at ? \Carbon\Carbon::parse($article->published_at)->setTimezone('Asia/Manila')->format('F j, Y - g:i A') : 'Kamakailan' }}
+                                           {{ $article->created_at ? \Carbon\Carbon::parse($article->created_at)->setTimezone('Asia/Manila')->format('M j, Y') : 'Kamakailan' }}
                                        </span>
                                        <a href="{{ route('news.show', $article->id) }}" class="font-bold text-emerald-700 hover:underline flex items-center gap-1">Basahin <i class="fa-solid fa-arrow-right text-[9px]"></i></a>
                                    </div>
                                </div>
                            </div>
                        @empty
-                           <div class="col-span-full py-12 text-center text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                               Walang nakitang mga balita para sa kategoryang ito.
+                           <div class="col-span-full py-16 text-center text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                               <i class="fa-solid fa-triangle-exclamation text-3xl text-amber-500 mb-2 block"></i>
+                               <p class="font-bold text-gray-800">Walang nakitang balita na tugma sa iyong hinahanap.</p>
+                               <p class="text-xs text-gray-500 mt-1">Subukang mag-type ng ibang salita o i-clear ang paghahanap.</p>
                            </div>
                        @endforelse
                    </div>
 
-                   <div class="mt-8">
-                       {{ $articles->links() }}
-                   </div>
+                   @if(method_exists($articles, 'links'))
+                       <div class="mt-8">
+                           {{ $articles->links() }}
+                       </div>
+                   @endif
                </section>
            </div>
 
-           <!-- Right Sidebar / Ads para sa Categories -->
+           <!-- Sidebar para sa Specific Category o Search results -->
+           @if((request('category') && request('category') != 'All') || request('search'))
            <div class="w-full lg:w-1/3 flex flex-col gap-6">
                <div class="bg-white border border-amber-200 rounded-xl shadow-xs overflow-hidden news-card">
                    <div class="bg-amber-50 px-4 py-2 border-b border-amber-100 flex justify-between items-center">
@@ -337,29 +251,31 @@ document.addEventListener("DOMContentLoaded", function () {
 
                <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm news-card">
                    <h2 class="text-sm font-black border-b-2 border-emerald-700 pb-2 mb-3 uppercase tracking-wider text-gray-900 flex justify-between items-center">
-                       <span>Top Stories</span>
+                       <span>Top Stories (Most Viewed)</span>
                        <i class="fa-solid fa-bolt text-emerald-700"></i>
                    </h2>
                    <div class="divide-y divide-gray-100">
                        @isset($topStories)
-                           @forelse($topStories as $story)
-                               <div class="py-2.5 first:pt-0 last:pb-0 flex items-center space-x-3">
+                           @forelse($topStories as $index => $story)
+                               <div class="py-2.5 first:pt-0 last:pb-0 flex items-start space-x-3">
+                                   <span class="flex items-center justify-center bg-emerald-100 text-emerald-800 font-black text-xs w-6 h-6 rounded-full shrink-0 mt-0.5">
+                                       {{ $index + 1 }}
+                                   </span>
                                    @if($story->image_url)
-                                       <a href="{{ route('news.show', $story->id) }}">
-                                           <img src="{{ $story->image_url }}" class="w-12 h-12 object-cover rounded-md flex-shrink-0" alt="Thumbnail">
+                                       <a href="{{ route('news.show', $story->id) }}" class="shrink-0">
+                                           <img src="{{ $story->image_url }}" class="w-12 h-12 object-cover rounded-md" alt="Thumbnail">
                                        </a>
                                    @endif
                                    <div class="min-w-0 flex-1">
                                        <div class="flex items-center gap-1.5">
                                            <span class="text-[10px] font-bold text-emerald-700 uppercase">{{ $story->category }}</span>
-                                           @if($story->published_at && \Carbon\Carbon::parse($story->published_at)->diffInHours(\Carbon\Carbon::now()) <= 24)
-                                               <span class="bg-emerald-600 text-white text-[9px] font-black px-1 py-0.2 rounded uppercase tracking-wider">NEW</span>
+                                           @if(isset($story->views))
+                                               <span class="text-[9px] text-gray-400 font-semibold"><i class="fa-solid fa-eye mr-0.5"></i> {{ number_format($story->views) }}</span>
                                            @endif
                                        </div>
                                        <h3 class="font-bold text-xs text-gray-900 hover:text-emerald-700 transition line-clamp-2 leading-snug">
                                            <a href="{{ route('news.show', $story->id) }}">{{ $story->title }}</a>
                                        </h3>
-                                       <span class="text-[10px] text-gray-500 mt-0.5 block"><i class="fa-regular fa-clock mr-1"></i> {{ $story->published_at ? \Carbon\Carbon::parse($story->published_at)->setTimezone('Asia/Manila')->format('M j, Y - g:i A') : '' }}</span>
                                    </div>
                                </div>
                            @empty
@@ -369,35 +285,204 @@ document.addEventListener("DOMContentLoaded", function () {
                    </div>
                </div>
            </div>
+           @endif
 
        </div>
        @endif
 
-       <!-- KUNG NASA "MGA BALITA" HOMEPAGE KA PA RIN: Ipakita ang regular grid -->
-       @if(!request('category') || request('category') == '')
+
+       <!-- KUNG WALA PANG SEARCH O CATEGORY (DEFAULT HOMEPAGE VIEW) -->
+       @if(!request('search') && (!request('category') || request('category') == ''))
+       <div class="flex flex-col lg:flex-row gap-8 mb-8 scroll-fade">
+           
+           <div class="w-full lg:w-2/3 flex flex-col gap-6">
+               <section class="scroll-fade">
+                   <div class="flex items-center justify-between border-b-2 border-emerald-700 pb-2 mb-6">
+                       <div>
+                           <p class="text-xs font-black uppercase tracking-wider text-gray-500">Pinakabagong Balita</p>
+                           <h2 class="text-2xl font-black uppercase text-emerald-900 mt-1">Mga Balita</h2>
+                       </div>
+                   </div>
+
+                   @php
+                       $latestStory = $featuredStories->first();
+                   @endphp
+
+                   @if($latestStory)
+                       <div class="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col shadow-sm news-card mb-6">
+                           @if($latestStory->image_url)
+                               <div class="w-full h-72 sm:h-96 relative overflow-hidden">
+                                   <a href="{{ route('news.show', $latestStory->id) }}" class="block w-full h-full">
+                                       <img src="{{ $latestStory->image_url }}" alt="Latest Thumbnail" class="w-full h-full object-cover">
+                                   </a>
+                                   <span class="absolute top-3 left-3 bg-emerald-700 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow z-10">{{ $latestStory->category }}</span>
+                               </div>
+                           @endif
+                           <div class="p-5 flex-1 flex flex-col justify-between">
+                               <div>
+                                   <div class="flex items-center gap-2 mb-1">
+                                       @if(!$latestStory->image_url)
+                                           <span class="text-xs font-bold text-emerald-700 uppercase">{{ $latestStory->category }}</span>
+                                       @endif
+                                       @if($latestStory->created_at && \Carbon\Carbon::parse($latestStory->created_at)->diffInHours(\Carbon\Carbon::now()) <= 24)
+                                           <span class="bg-emerald-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse shadow-2xs">NEW</span>
+                                       @endif
+                                   </div>
+                                   <h3 class="font-black text-xl text-gray-900 hover:text-emerald-700 transition leading-snug mt-1 mb-2">
+                                       <a href="{{ route('news.show', $latestStory->id) }}">{{ $latestStory->title }}</a>
+                                   </h3>
+                                   <p class="text-xs md:text-sm text-gray-600 line-clamp-3 mb-4">
+                                       {{ $latestStory->excerpt ?? Str::limit(strip_tags($latestStory->body), 120) }}
+                                   </p>
+                               </div>
+                               <div class="flex items-center justify-between pt-3 border-t border-gray-100 text-[11px] text-gray-500">
+                                   <span class="flex items-center font-medium">
+                                       <i class="fa-regular fa-clock text-emerald-700 mr-1.5"></i> 
+                                       {{ $latestStory->created_at ? \Carbon\Carbon::parse($latestStory->created_at)->setTimezone('Asia/Manila')->format('F j, Y - g:i A') : 'Kamakailan' }}
+                                   </span>
+                                   <a href="{{ route('news.show', $latestStory->id) }}" class="font-bold text-emerald-700 hover:underline flex items-center gap-1">Basahin <i class="fa-solid fa-arrow-right text-[9px]"></i></a>
+                               </div>
+                           </div>
+                       </div>
+                   @endif
+
+                   @if($featuredStories->count() > 1)
+                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                           @foreach($featuredStories->slice(1) as $story)
+                               <div class="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col shadow-sm news-card">
+                                   @if($story->image_url)
+                                       <div class="w-full h-48 relative overflow-hidden">
+                                           <a href="{{ route('news.show', $story->id) }}" class="block w-full h-full">
+                                               <img src="{{ $story->image_url }}" alt="Thumbnail" class="w-full h-full object-cover">
+                                           </a>
+                                           <span class="absolute top-3 left-3 bg-emerald-700 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow z-10">{{ $story->category }}</span>
+                                       </div>
+                                   @endif
+                                   <div class="p-4 flex-1 flex flex-col justify-between">
+                                       <div>
+                                           <div class="flex items-center gap-2 mb-1">
+                                               @if(!$story->image_url)
+                                                   <span class="text-xs font-bold text-emerald-700 uppercase">{{ $story->category }}</span>
+                                               @endif
+                                               @if($story->created_at && \Carbon\Carbon::parse($story->created_at)->diffInHours(\Carbon\Carbon::now()) <= 24)
+                                                   <span class="bg-emerald-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse shadow-2xs">NEW</span>
+                                               @endif
+                                           </div>
+                                           <h3 class="font-bold text-sm text-gray-900 hover:text-emerald-700 transition line-clamp-2 mt-1 mb-2">
+                                               <a href="{{ route('news.show', $story->id) }}">{{ $story->title }}</a>
+                                           </h3>
+                                           <p class="text-xs text-gray-600 line-clamp-2 mb-4">
+                                               {{ $story->excerpt ?? Str::limit(strip_tags($story->body), 80) }}
+                                           </p>
+                                       </div>
+                                       <div class="flex items-center justify-between pt-3 border-t border-gray-100 text-[11px] text-gray-500">
+                                           <span class="flex items-center font-medium">
+                                               <i class="fa-regular fa-clock text-emerald-700 mr-1.5"></i> 
+                                               {{ $story->created_at ? \Carbon\Carbon::parse($story->created_at)->setTimezone('Asia/Manila')->format('M j, Y') : '' }}
+                                           </span>
+                                           <a href="{{ route('news.show', $story->id) }}" class="font-bold text-emerald-700 hover:underline">Basahin &rarr;</a>
+                                       </div>
+                                   </div>
+                               </div>
+                           @endforeach
+                       </div>
+                   @endif
+               </section>
+           </div>
+
+           <!-- Sidebar Homepage -->
+           <div class="w-full lg:w-1/3 flex flex-col gap-6">
+               <div class="bg-white border border-amber-200 rounded-xl shadow-xs overflow-hidden news-card">
+                   <div class="bg-amber-50 px-4 py-2 border-b border-amber-100 flex justify-between items-center">
+                       <span class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                           <i class="fa-solid fa-bullhorn text-amber-600"></i> Kiwi Partner Promo
+                       </span>
+                       <span class="text-[10px] bg-amber-200 text-amber-900 font-semibold px-2 py-0.5 rounded-full uppercase">Sponsored / Ad</span>
+                   </div>
+                   <div class="p-4">
+                       <div class="relative group overflow-hidden rounded-lg mb-3 bg-gray-100 aspect-video flex items-center justify-center">
+                           <img src="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=600&q=80" alt="Burger Promo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                           <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded">Limited Offer</span>
+                       </div>
+                       <h4 class="font-bold text-gray-900 text-sm mb-1 line-clamp-1 hover:text-emerald-700 transition-colors">Burger Bundle Special Deal!</h4>
+                       <p class="text-xs text-gray-700 mb-3 leading-relaxed">
+                           Gamitin ang promo code na <strong class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">KIWIBATANGAS</strong> para sa libreng delivery.
+                       </p>
+                       <a href="#" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg shadow-xs transition-all duration-200 flex items-center justify-center gap-2 group">
+                           <span>Alamin Pa</span>
+                           <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                       </a>
+                   </div>
+               </div>
+
+               <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm news-card">
+                   <h2 class="text-sm font-black border-b-2 border-emerald-700 pb-2 mb-3 uppercase tracking-wider text-gray-900 flex justify-between items-center">
+                       <span>Top Stories (Most Viewed)</span>
+                       <i class="fa-solid fa-bolt text-emerald-700"></i>
+                   </h2>
+                   <div class="divide-y divide-gray-100">
+                       @isset($topStories)
+                           @forelse($topStories as $index => $story)
+                               <div class="py-2.5 first:pt-0 last:pb-0 flex items-start space-x-3">
+                                   <span class="flex items-center justify-center bg-emerald-100 text-emerald-800 font-black text-xs w-6 h-6 rounded-full shrink-0 mt-0.5">
+                                       {{ $index + 1 }}
+                                   </span>
+
+                                   @if($story->image_url)
+                                       <a href="{{ route('news.show', $story->id) }}" class="shrink-0">
+                                           <img src="{{ $story->image_url }}" class="w-12 h-12 object-cover rounded-md" alt="Thumbnail">
+                                       </a>
+                                   @endif
+                                   <div class="min-w-0 flex-1">
+                                       <div class="flex items-center gap-1.5">
+                                           <span class="text-[10px] font-bold text-emerald-700 uppercase">{{ $story->category }}</span>
+                                           @if(isset($story->views))
+                                               <span class="text-[9px] text-gray-400 font-semibold"><i class="fa-solid fa-eye mr-0.5"></i> {{ number_format($story->views) }}</span>
+                                           @endif
+                                       </div>
+                                       <h3 class="font-bold text-xs text-gray-900 hover:text-emerald-700 transition line-clamp-2 leading-snug">
+                                           <a href="{{ route('news.show', $story->id) }}">{{ $story->title }}</a>
+                                       </h3>
+                                       <span class="text-[10px] text-gray-500 mt-0.5 block"><i class="fa-regular fa-clock mr-1"></i> {{ $story->created_at ? \Carbon\Carbon::parse($story->created_at)->setTimezone('Asia/Manila')->format('M j, Y') : '' }}</span>
+                                   </div>
+                               </div>
+                           @empty
+                               <div class="py-2 text-xs text-gray-500 text-center">Walang top stories.</div>
+                           @endforelse
+                       @endisset
+                   </div>
+               </div>
+           </div>
+       </div>
+
+       <!-- MGA PINAKAHULING BALITA SA HOMEPAGE -->
        <section class="mb-12 scroll-fade">
             <div class="flex items-center justify-between border-b-2 border-emerald-700 pb-2 mb-6">
                 <h2 class="text-2xl font-black uppercase text-emerald-900">Mga Pinakahuling Balita</h2>
-                @if(request('search'))
-                    <a href="/" class="text-xs font-bold bg-gray-100 text-gray-700 px-3 py-1 rounded hover:bg-gray-200">I-reset ang Salain</a>
-                @endif
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                @forelse($articles as $article)
+                @php
+                    $allLatestNews = \App\Models\Article::orderBy('created_at', 'desc')->take(8)->get();
+                @endphp
+
+                @forelse($allLatestNews as $article)
                     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col shadow-sm news-card">
                         @if($article->image_url)
-                            <div class="overflow-hidden bg-gray-900 w-full flex items-center justify-center relative">
-                                <a href="{{ route('news.show', $article->id) }}" class="w-full flex justify-center">
-                                    <img src="{{ $article->image_url }}" alt="Thumbnail" class="w-full h-auto object-contain max-h-64">
+                            <div class="w-full h-44 relative overflow-hidden">
+                                <a href="{{ route('news.show', $article->id) }}" class="block w-full h-full">
+                                    <img src="{{ $article->image_url }}" alt="Thumbnail" class="w-full h-full object-cover">
                                 </a>
+                                <span class="absolute top-3 left-3 bg-emerald-700 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow z-10">{{ $article->category }}</span>
                             </div>
                         @endif
                         <div class="p-4 flex-1 flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center gap-1.5 mb-1">
-                                    <span class="text-xs font-bold text-emerald-700 uppercase">{{ $article->category }}</span>
-                                    @if($article->published_at && \Carbon\Carbon::parse($article->published_at)->diffInHours(\Carbon\Carbon::now()) <= 24)
+                                    @if(!$article->image_url)
+                                        <span class="text-xs font-bold text-emerald-700 uppercase">{{ $article->category }}</span>
+                                    @endif
+                                    @if($article->created_at && \Carbon\Carbon::parse($article->created_at)->diffInHours(\Carbon\Carbon::now()) <= 24)
                                         <span class="bg-emerald-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded uppercase tracking-wider animate-pulse">NEW</span>
                                     @endif
                                 </div>
@@ -406,7 +491,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 </h3>
                             </div>
                             <div class="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
-                                <span class="text-xs text-gray-500 flex items-center"><i class="fa-regular fa-clock mr-1"></i> {{ $article->published_at ? \Carbon\Carbon::parse($article->published_at)->setTimezone('Asia/Manila')->format('M j, Y') : '' }}</span>
+                                <span class="text-xs text-gray-500 flex items-center"><i class="fa-regular fa-clock mr-1"></i> {{ $article->created_at ? \Carbon\Carbon::parse($article->created_at)->setTimezone('Asia/Manila')->format('M j, Y') : '' }}</span>
                                 <a href="{{ route('news.show', $article->id) }}" class="font-bold text-emerald-700 hover:underline text-xs">Basahin &rarr;</a>
                             </div>
                         </div>
@@ -418,8 +503,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 @endforelse
             </div>
 
-            <div class="mt-8">
-                {{ $articles->links() }}
+            <div class="mt-8 text-center">
+                <a href="{{ route('home', ['category' => 'All']) }}" class="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-8 py-3 rounded-full shadow-md transition-all duration-300 group">
+                    <span>View All News</span>
+                    <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+                </a>
             </div>
         </section>
         @endif

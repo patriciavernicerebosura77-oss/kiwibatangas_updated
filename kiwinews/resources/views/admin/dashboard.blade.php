@@ -16,7 +16,7 @@
         <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 px-8 py-4 flex justify-between items-center shadow-2xs">
             <div class="flex items-center space-x-10">
                 <div class="flex items-center space-x-3">
-                    <img src="https://via.placeholder.com/40" alt="Kiwi Batangas Logo" class="w-10 h-10 rounded-full object-cover border border-emerald-500 shadow-xs" id="brand-logo">
+                    <img src="{{ asset('images/logo.kiwi.jpg') }}" alt="Kiwi Batangas Logo" class="w-10 h-10 rounded-full object-cover border border-emerald-500 shadow-xs" id="brand-logo">
                     <div class="flex flex-col">
                         <span class="text-base font-black tracking-tight text-slate-900 leading-tight">Kiwi Batangas</span>
                         <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-600">Digital News Portal</span>
@@ -41,7 +41,7 @@
 
             <div class="flex items-center space-x-4">
                 <div class="flex items-center gap-3 bg-slate-50 border border-slate-200/80 px-3.5 py-2 rounded-2xl">
-                    <div class="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-xs">A</div>
+                    <img src="{{ asset('images/logo.kiwi.jpg') }}" alt="Administrator" class="w-8 h-8 rounded-full object-cover border border-emerald-600" onerror="this.src='https://via.placeholder.com/40'">
                     <span class="font-bold text-xs text-slate-700 hidden sm:inline">Administrator</span>
                 </div>
                 <form action="{{ route('admin.logout') }}" method="POST">
@@ -413,14 +413,16 @@
                     </select>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/80 p-5 rounded-2xl border border-slate-200/80">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Image URL (Opsyonal)</label>
-                        <input type="url" name="image_url" placeholder="https://images.unsplash.com/..." class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 transition-all">
-                    </div>
+                <div class="grid grid-cols-1 gap-4 bg-slate-50/80 p-5 rounded-2xl border border-slate-200/80">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Mag-upload ng Larawan</label>
-                        <input type="file" name="images[]" multiple accept="image/*" class="w-full bg-white border border-slate-200 rounded-xl p-1 text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700">
+                        <input type="file" name="images[]" multiple accept="image/*" required class="w-full bg-white border border-slate-200 rounded-xl p-1 text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700">
+                        <p class="text-[10px] text-slate-500 mt-1">Pumili ng isa o maraming larawan mula sa iyong device.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Mag-upload ng Video (Opsyonal)</label>
+                        <input type="file" name="video_file" accept="video/*" class="w-full bg-white border border-slate-200 rounded-xl p-1 text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700">
+                        <p class="text-[10px] text-slate-500 mt-1">Pwedeng mag-upload ng MP4/WebM/MOV/OGG file mula sa iyong device.</p>
                     </div>
                 </div>
 
@@ -437,7 +439,6 @@
                 <div class="flex flex-wrap gap-6 text-xs font-semibold pt-1">
                     <label class="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" name="is_featured" value="1" class="rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"> Is Featured</label>
                     <label class="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" name="is_breaking" value="1" class="rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"> Breaking News</label>
-                    <label class="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" name="is_top_story" value="1" class="rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"> Top Story</label>
                 </div>
 
                 <div class="flex justify-end gap-3.5 pt-5 border-t border-slate-200">
@@ -458,7 +459,7 @@
                 <button onclick="closeEditModal()" class="text-white hover:text-emerald-200 font-bold text-2xl cursor-pointer">&times;</button>
             </div>
 
-            <form id="editForm" method="POST" class="p-8 space-y-5 max-h-[75vh] overflow-y-auto">
+            <form id="editForm" method="POST" enctype="multipart/form-data" class="p-8 space-y-5 max-h-[75vh] overflow-y-auto">
                 @csrf
                 @method('PUT')
                 
@@ -477,12 +478,20 @@
                     </select>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Image URL</label>
-                    <input type="url" id="edit_image_url" name="image_url" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 transition-all">
+                <div class="grid grid-cols-1 gap-4 bg-slate-50/80 p-5 rounded-2xl border border-slate-200/80">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Mag-upload ng Larawan</label>
+                        <input type="file" id="edit_images" name="images[]" multiple accept="image/*" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 transition-all">
+                        <p class="text-[10px] text-slate-500 mt-1">Piliin ang mga bagong larawan mula sa iyong device para idagdag sa artikulo.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Mag-upload ng Video (Opsyonal)</label>
+                        <input type="file" id="edit_video_file" name="video_file" accept="video/*" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 transition-all">
+                        <p class="text-[10px] text-slate-500 mt-1">Piliin ang bagong video mula sa iyong device kung kailangan.</p>
+                    </div>
                 </div>
 
-                <div>
+                    <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Maikling Buod (Excerpt)</label>
                     <textarea id="edit_excerpt" name="excerpt" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-600 transition-all"></textarea>
                 </div>
@@ -495,7 +504,6 @@
                 <div class="flex flex-wrap gap-6 text-xs font-semibold pt-1">
                     <label class="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" id="edit_is_featured" name="is_featured" value="1" class="rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"> Is Featured</label>
                     <label class="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" id="edit_is_breaking" name="is_breaking" value="1" class="rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"> Breaking News</label>
-                    <label class="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" id="edit_is_top_story" name="is_top_story" value="1" class="rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"> Top Story</label>
                 </div>
 
                 <div class="flex justify-end gap-3.5 pt-5 border-t border-slate-200">
@@ -613,13 +621,11 @@
                     document.getElementById('editForm').action = `/admin/articles/${id}`;
                     document.getElementById('edit_title').value = data.title;
                     document.getElementById('edit_category').value = data.category;
-                    document.getElementById('edit_image_url').value = data.image_url || '';
                     document.getElementById('edit_excerpt').value = data.excerpt || '';
                     document.getElementById('edit_body').value = data.body;
                     
                     document.getElementById('edit_is_featured').checked = data.is_featured == 1;
                     document.getElementById('edit_is_breaking').checked = data.is_breaking == 1;
-                    document.getElementById('edit_is_top_story').checked = data.is_top_story == 1;
 
                     document.getElementById('editNewsModal').classList.remove('hidden');
                 });

@@ -56,7 +56,7 @@ class AdminController extends Controller
             'category' => 'required|string',
             'excerpt' => 'nullable|string',
             'body' => 'required|string',
-            'image_url' => 'nullable|string',
+            'video_file' => 'nullable|file|mimes:mp4,webm,mov,ogg|max:20480',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
@@ -68,17 +68,17 @@ class AdminController extends Controller
             }
         }
 
-        if (!empty($validated['image_url'])) {
-            array_unshift($imagePaths, $validated['image_url']);
+        if ($request->hasFile('video_file')) {
+            $videoPath = $request->file('video_file')->store('videos', 'public');
+            $validated['video_url'] = asset('storage/' . $videoPath);
         }
 
-        $validated['image_url'] = $imagePaths[0] ?? null; 
-        
+        $validated['image_url'] = $imagePaths[0] ?? null;
+        $validated['images'] = $imagePaths ?: null;
         $validated['slug'] = Str::slug($validated['title']) . '-' . uniqid();
         $validated['published_at'] = now();
         $validated['is_featured'] = $request->has('is_featured');
         $validated['is_breaking'] = $request->has('is_breaking');
-        $validated['is_top_story'] = $request->has('is_top_story');
 
         Article::create($validated);
 
@@ -102,12 +102,36 @@ class AdminController extends Controller
             'category' => 'required|string',
             'excerpt' => 'nullable|string',
             'body' => 'required|string',
-            'image_url' => 'nullable|string',
+            'video_file' => 'nullable|file|mimes:mp4,webm,mov,ogg|max:20480',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
+
+        $imagePaths = [];
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+                $path = $file->store('articles', 'public');
+                $imagePaths[] = asset('storage/' . $path);
+            }
+        }
+
+        if ($request->hasFile('video_file')) {
+            $videoPath = $request->file('video_file')->store('videos', 'public');
+            $validated['video_url'] = asset('storage/' . $videoPath);
+        }
+
+        $existingImages = is_array($article->images) ? $article->images : [];
+        $validated['images'] = array_values(array_unique(array_merge($existingImages, $imagePaths)));
+
+        if (empty($validated['image_url'])) {
+            $validated['image_url'] = $article->image_url ?: ($validated['images'][0] ?? null);
+        }
+
+        if (!isset($validated['video_url'])) {
+            $validated['video_url'] = $article->video_url;
+        }
 
         $validated['is_featured'] = $request->has('is_featured');
         $validated['is_breaking'] = $request->has('is_breaking');
-        $validated['is_top_story'] = $request->has('is_top_story');
 
         $article->update($validated);
 
@@ -145,11 +169,14 @@ class AdminController extends Controller
         return back()->with('success', 'Matagumpay na na-delete ang kategorya!');
     }
 
-    public function index()
+   public function index()
     {
+        $featuredStoriesCount = Article::where('is_featured', true)->count();
+        
         return view('home', [
             'featuredStory' => Article::where('is_featured', true)->latest()->first(),
-            'topStories' => Article::where('is_top_story', true)->latest()->take(5)->get(),
+            'featuredStories' => Article::where('is_featured', true)->latest()->take(5)->get(),
+            'hasMoreFeatured' => $featuredStoriesCount > 5,
             'breakingNews' => Article::where('is_breaking', true)->latest()->get(),
             'articles' => Article::latest()->paginate(8),
         ]);

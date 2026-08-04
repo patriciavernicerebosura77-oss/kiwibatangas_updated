@@ -10,11 +10,24 @@ class Article extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title', 'slug', 'excerpt', 'body', 'category', 
-        'image_url', 'is_breaking', 'is_featured', 'published_at'
+        'title',
+        'category',
+        'excerpt',
+        'body',
+        'image_url',
+        'video_url',
+        'images',
+        'slug',
+        'published_at',
+        'is_featured',
+        'is_breaking',
+        'daily_views',
+        'weekly_views',
+        'monthly_views',
+        'yearly_views'
     ];
 
     protected $casts = [
-        'published_at' => 'datetime',
+        'images' => 'array',
     ];
 }
