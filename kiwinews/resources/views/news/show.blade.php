@@ -19,7 +19,7 @@
                     <span class="text-[10px] font-bold text-emerald-700 tracking-widest uppercase">Digital News Portal</span>
                 </div>
             </a>
-            <!-- Dynamic Back Button sa Header na gumagamit ng JavaScript history.back() -->
+            <!-- Dynamic Back Button sa Header -->
             <button onclick="history.back()" class="text-xs font-bold bg-gray-100 text-gray-700 px-3.5 py-1.5 rounded-full hover:bg-emerald-700 hover:text-white transition cursor-pointer">
                 <i class="fa-solid fa-arrow-left mr-1"></i> Bumalik
             </button>
@@ -169,21 +169,24 @@
             @endif
         @endif
 
-        <!-- MAIKLING BUOD (EXCERPT) - Sakto sa ibaba ng larawan, maliit, hindi madilim ang kulay, at may malambot na estilo -->
+        <!-- MAIKLING BUOD (EXCERPT) -->
         @if(!empty($article->excerpt))
             <p class="text-xs md:text-sm text-gray-500 italic mb-6 leading-relaxed border-l-2 border-emerald-600 pl-3">
                 {{ $article->excerpt }}
             </p>
         @endif
 
-        <!-- Article Body / Full Info -->
+        <!-- Article Body / Full Info (WITH AUTOMATIC CLICKABLE URLS) -->
         <div class="prose max-w-none text-gray-800 text-base md:text-lg leading-relaxed space-y-4">
-            {!! nl2br(e($article->body)) !!}
+            {!! nl2br(preg_replace(
+                '/(https?:\/\/[^\s<]+)/i',
+                '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-emerald-600 underline font-medium hover:text-emerald-800 break-all">$1</a>',
+                e($article->body)
+            )) !!}
         </div>
 
         <!-- Share / Back Button Footer -->
         <div class="mt-10 pt-6 border-t border-gray-200 flex justify-between items-center">
-            <!-- Dynamic Back Button sa Footer na gumagamit din ng JavaScript history.back() -->
             <button onclick="history.back()" class="text-xs font-bold bg-emerald-700 text-white px-4 py-2 rounded-lg hover:bg-emerald-800 transition cursor-pointer flex items-center">
                 <i class="fa-solid fa-arrow-left mr-1.5"></i> Bumalik sa Nakaraang Pahina
             </button>
