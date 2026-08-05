@@ -28,7 +28,7 @@ class NewArticleNotification extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject('Bagong Balita: ' . $this->article->title)
-            ->greeting('Hello mula sa Kiwi Batangas Express!')
+            ->greeting('Hello mula sa Kiwi Batangas')
             ->line('May bago kaming inilathalang balita: "' . $this->article->title . '"')
             ->line($this->article->excerpt)
             ->action('Basahin ang Buong Balita', url('/articles/' . $this->article->slug))
