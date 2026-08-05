@@ -7,6 +7,17 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\Admin\AdController;
+use App\Http\Controllers\NewsletterController;
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    // Ibang admin routes...
+    
+    // Subscriber Management Routes
+    Route::patch('/subscribers/{id}/toggle-block', [AdminController::class, 'toggleSubscriberBlock'])->name('subscribers.toggle-block');
+    Route::delete('/subscribers/{id}', [AdminController::class, 'destroySubscriber'])->name('subscribers.destroy');
+});
+
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'store'])->name('newsletter.subscribe');
 
 // Route para sa Single News Page
 Route::get('/news/{id}', [NewsController::class, 'show'])->name('news.show');

@@ -6,8 +6,11 @@
     <title>Kiwi Batangas | Digital News Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Alpine.js (Kinakailangan para sa smooth 3-sec fade toast notification at Modals) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     <style>
+        [x-cloak] { display: none !important; }
         .scroll-fade {
             opacity: 0;
             transform: translateY(20px);
@@ -26,12 +29,59 @@
         }
     </style>
 </head>
-<body class="bg-white text-gray-900 font-sans">
+<body class="bg-white text-gray-900 font-sans" x-data="{ showScrollTop: false, openAdModal: false }" @scroll.window="showScrollTop = (window.pageYOffset > 300)">
 
+<!-- TOAST NOTIFICATION (TOP-CENTER FITTED CARD) -->
+@if(session('success') || session('error'))
+<div x-data="{ show: true }"
+     x-init="setTimeout(() => show = false, 3500)"
+     x-show="show"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0 -translate-y-5 scale-95"
+     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+     x-transition:leave="transition ease-in duration-300"
+     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+     x-transition:leave-end="opacity-0 -translate-y-5 scale-95"
+     class="fixed top-28 left-1/2 transform -translate-x-1/2 z-50 w-fit max-w-[90%]">
+    
+    @if(session('success'))
+    <div class="bg-white text-gray-900 px-4 py-3.5 rounded-2xl shadow-xl flex items-center gap-6 border-l-4 border-emerald-600 border border-gray-100">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 text-emerald-600">
+                <i class="fa-solid fa-check text-sm"></i>
+            </div>
+            <div class="pr-2">
+                <p class="text-xs font-bold text-gray-800">Tagumpay!</p>
+                <p class="text-xs text-gray-600 whitespace-nowrap">{{ session('success') }}</p>
+            </div>
+        </div>
+        <button @click="show = false" class="text-gray-400 hover:text-gray-600 text-xs p-1 shrink-0">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+    @endif
 
+    @if(session('error'))
+    <div class="bg-white text-gray-900 px-4 py-3.5 rounded-2xl shadow-xl flex items-center gap-6 border-l-4 border-red-600 border border-gray-100">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0 text-red-600">
+                <i class="fa-solid fa-exclamation text-sm"></i>
+            </div>
+            <div class="pr-2">
+                <p class="text-xs font-bold text-gray-800">Paunawa</p>
+                <p class="text-xs text-gray-600 whitespace-nowrap">{{ session('error') }}</p>
+            </div>
+        </div>
+        <button @click="show = false" class="text-gray-400 hover:text-gray-600 text-xs p-1 shrink-0">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+    @endif
+</div>
+@endif
 
     <!-- MAIN HEADER -->
-    <header class="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
+    <header class="bg-white shadow-sm sticky top-0 z-40 border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 py-2 flex flex-col md:flex-row justify-between items-center gap-3">
             <a href="/" class="flex items-center space-x-2.5">
                 <img src="{{ asset('images/logo.kiwi.jpg') }}" alt="Kiwi Batangas Logo" class="h-11 w-11 rounded-full object-cover border-2 border-emerald-600 shadow-sm" onerror="this.src='https://via.placeholder.com/50'">
@@ -42,31 +92,31 @@
             </a>
 
             <div class="bg-white-100 text-gray-700 text-xs py-1.5 px-3 border-b border-white-200">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
-        <div class="flex items-center space-x-4">
-            <span><i class="fa-regular fa-calendar mr-1"></i> {{ \Carbon\Carbon::now('Asia/Manila')->format('l, F j, Y') }}</span>
-            
-            <!-- WEATHER SECTION (Non-redirecting, accurate live forecast) -->
-            <div class="flex items-center space-x-1.5 bg-white px-2.5 py-0.5 rounded border border-gray-300 shadow-2xs">
-                <i id="weather-icon" class="fa-solid fa-cloud-sun text-amber-500 text-sm"></i>
-                <div class="flex items-center space-x-1 font-medium text-gray-800">
-                    <span id="weather-location" class="font-bold text-gray-900">loading...</span>
-                    <span id="weather-temp" class="text-emerald-700 font-black">--°C</span>
-                    <span class="text-gray-400 font-normal text-[10px]">| Weather</span>
+                <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
+                    <div class="flex items-center space-x-4">
+                        <span><i class="fa-regular fa-calendar mr-1"></i> {{ \Carbon\Carbon::now('Asia/Manila')->format('l, F j, Y') }}</span>
+                        
+                        <!-- WEATHER SECTION -->
+                        <div class="flex items-center space-x-1.5 bg-white px-2.5 py-0.5 rounded border border-gray-300 shadow-2xs">
+                            <i id="weather-icon" class="fa-solid fa-cloud-sun text-amber-500 text-sm"></i>
+                            <div class="flex items-center space-x-1 font-medium text-gray-800">
+                                <span id="weather-location" class="font-bold text-gray-900">loading...</span>
+                                <span id="weather-temp" class="text-emerald-700 font-black">--°C</span>
+                                <span class="text-gray-400 font-normal text-[10px]">| Weather</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BSP FX RATES SECTION -->
+                    <a href="https://www.bsp.gov.ph/SitePages/Statistics/ExchangeRate.aspx" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2 bg-white px-2.5 py-0.5 rounded border border-gray-300 shadow-2xs hover:border-emerald-600 transition group">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-emerald-700">BSP FX Rates:</span>
+                        <div id="fx-rotator" class="font-medium text-xs text-emerald-800 transition-opacity duration-500">
+                            <span class="text-gray-400 italic">loading...</span>
+                        </div>
+                        <i class="fa-solid fa-external-link-alt text-[8px] text-gray-400 group-hover:text-emerald-700 ml-0.5"></i>
+                    </a>
                 </div>
             </div>
-        </div>
-
-        <!-- BSP FX RATES SECTION (Auto-updating live rates with direct official BSP link) -->
-        <a href="https://www.bsp.gov.ph/SitePages/Statistics/ExchangeRate.aspx" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2 bg-white px-2.5 py-0.5 rounded border border-gray-300 shadow-2xs hover:border-emerald-600 transition group">
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-emerald-700">BSP FX Rates:</span>
-            <div id="fx-rotator" class="font-medium text-xs text-emerald-800 transition-opacity duration-500">
-                <span class="text-gray-400 italic">loading...</span>
-            </div>
-            <i class="fa-solid fa-external-link-alt text-[8px] text-gray-400 group-hover:text-emerald-700 ml-0.5"></i>
-        </a>
-    </div>
-</div>
 
             <div class="flex items-center gap-2.5 w-full md:w-auto">
                 <form action="/" method="GET" class="flex items-center w-full md:w-80">
@@ -100,50 +150,50 @@
     </header>
 
     @if(isset($breakingNews) && $breakingNews->count() > 0)
-<div class="bg-emerald-50 border-y border-emerald-100 text-emerald-900 text-xs py-2 px-4 overflow-hidden scroll-fade">
-    <div class="max-w-7xl mx-auto flex items-center space-x-3">
-        <span class="bg-emerald-700 text-white font-bold px-2 py-0.5 rounded uppercase text-[10px] whitespace-nowrap flex items-center gap-1.5 shrink-0 z-10 shadow-2xs">
-            <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Just In
-        </span>
-        
-        <div id="marquee-container" class="relative w-full overflow-hidden flex items-center whitespace-nowrap cursor-pointer">
-            <div id="marquee-track" class="inline-flex items-center space-x-12 shrink-0">
-                @foreach($breakingNews as $item)
-                    <div class="inline-flex items-center space-x-2 shrink-0">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-700 inline-block"></span>
-                        <a href="{{ route('news.show', $item->id) }}" class="hover:underline hover:text-emerald-700 font-semibold text-gray-900">{{ $item->title }}</a>
-                    </div>
-                @endforeach
+    <div class="bg-emerald-50 border-y border-emerald-100 text-emerald-900 text-xs py-2 px-4 overflow-hidden scroll-fade">
+        <div class="max-w-7xl mx-auto flex items-center space-x-3">
+            <span class="bg-emerald-700 text-white font-bold px-2 py-0.5 rounded uppercase text-[10px] whitespace-nowrap flex items-center gap-1.5 shrink-0 z-10 shadow-2xs">
+                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Just In
+            </span>
+            
+            <div id="marquee-container" class="relative w-full overflow-hidden flex items-center whitespace-nowrap cursor-pointer">
+                <div id="marquee-track" class="inline-flex items-center space-x-12 shrink-0">
+                    @foreach($breakingNews as $item)
+                        <div class="inline-flex items-center space-x-2 shrink-0">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-700 inline-block"></span>
+                            <a href="{{ route('news.show', $item->id) }}" class="hover:underline hover:text-emerald-700 font-semibold text-gray-900">{{ $item->title }}</a>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const container = document.getElementById('marquee-container');
-    const track = document.getElementById('marquee-track');
-    if (!container || !track) return;
-    const originalContent = track.innerHTML;
-    track.innerHTML = originalContent + originalContent + originalContent + originalContent + originalContent;
-    let scrollPos = 0;
-    const speed = 0.8; 
-    let isPaused = false;
-    function step() {
-        if (!isPaused) {
-            scrollPos += speed;
-            let singleSetWidth = track.scrollWidth / 5;
-            if (scrollPos >= singleSetWidth) { scrollPos -= singleSetWidth; }
-            track.style.transform = `translateX(-${scrollPos}px)`;
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const container = document.getElementById('marquee-container');
+        const track = document.getElementById('marquee-track');
+        if (!container || !track) return;
+        const originalContent = track.innerHTML;
+        track.innerHTML = originalContent + originalContent + originalContent + originalContent + originalContent;
+        let scrollPos = 0;
+        const speed = 0.8; 
+        let isPaused = false;
+        function step() {
+            if (!isPaused) {
+                scrollPos += speed;
+                let singleSetWidth = track.scrollWidth / 5;
+                if (scrollPos >= singleSetWidth) { scrollPos -= singleSetWidth; }
+                track.style.transform = `translateX(-${scrollPos}px)`;
+            }
+            requestAnimationFrame(step);
         }
+        container.addEventListener('mouseenter', () => isPaused = true);
+        container.addEventListener('mouseleave', () => isPaused = false);
         requestAnimationFrame(step);
-    }
-    container.addEventListener('mouseenter', () => isPaused = true);
-    container.addEventListener('mouseleave', () => isPaused = false);
-    requestAnimationFrame(step);
-});
-</script>
-@endif
+    });
+    </script>
+    @endif
 
     <!-- MAIN CONTAINER -->
     <main class="max-w-7xl mx-auto px-4 py-8 bg-white">
@@ -151,8 +201,8 @@ document.addEventListener("DOMContentLoaded", function () {
        <!-- KUNG MAY NAG-SEARCH O MAY PINILING CATEGORY -->
        @if(request('search') || (request('category') && request('category') != ''))
        <div class="flex flex-col lg:flex-row gap-8 mb-8 scroll-fade">
-           
-<div class="w-full @if((request('category') && request('category') != 'All') || request('search')) lg:w-2/3 @else w-full @endif flex flex-col gap-8">               <section class="scroll-fade">
+           <div class="w-full @if((request('category') && request('category') != 'All') || request('search')) lg:w-2/3 @else w-full @endif flex flex-col gap-8">               
+               <section class="scroll-fade">
                    <div class="flex items-center justify-between border-b-2 border-emerald-700 pb-2 mb-6">
                        <div>
                            <p class="text-xs font-black uppercase tracking-wider text-gray-500">Resulta ng Salain</p>
@@ -168,20 +218,19 @@ document.addEventListener("DOMContentLoaded", function () {
                                @endif
                            </h2>
                        </div>
-                       <!-- <a href="/" class="text-xs font-bold bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition">I-reset ang Salain</a> -->
                    </div>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-                           @forelse($articles as $article)
+                   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+                       @forelse($articles as $article)
                            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col shadow-sm news-card">
                                @if($article->image_url)
-    <div class="w-full h-48 relative overflow-hidden">
-        <a href="{{ route('news.show', $article->id) }}" class="block w-full h-full">
-            <img src="{{ $article->image_url }}" alt="Thumbnail" class="w-full h-full object-cover">
-        </a>
-        <span class="absolute top-3 left-3 bg-emerald-700 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow z-10">{{ $article->category }}</span>
-    </div>
-@endif
+                               <div class="w-full h-48 relative overflow-hidden">
+                                   <a href="{{ route('news.show', $article->id) }}" class="block w-full h-full">
+                                       <img src="{{ $article->image_url }}" alt="Thumbnail" class="w-full h-full object-cover">
+                                   </a>
+                                   <span class="absolute top-3 left-3 bg-emerald-700 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow z-10">{{ $article->category }}</span>
+                               </div>
+                               @endif
                                <div class="p-4 flex-1 flex flex-col justify-between">
                                    <div>
                                        <div class="flex items-center gap-2 mb-1">
@@ -229,52 +278,46 @@ document.addEventListener("DOMContentLoaded", function () {
            @if((request('category') && request('category') != 'All') || request('search'))
            <div class="w-full lg:w-1/3 flex flex-col gap-6">
                @php
-    $activeAd = \App\Models\Ad::where('is_active', true)->latest()->first();
-@endphp
+                   $dynamicAds = \App\Models\Ad::latest()->get();
+               @endphp
 
-@php
-    // Kunin ang mga active ads mula sa database
-    $dynamicAds = \App\Models\Ad::latest()->get();
-@endphp
+               @forelse($dynamicAds as $ad)
+               <div class="bg-white border border-amber-200 rounded-xl shadow-xs overflow-hidden news-card mb-4">
+                   <div class="bg-amber-50 px-4 py-2 border-b border-amber-100 flex justify-between items-center">
+                       <span class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                           <i class="fa-solid fa-bullhorn text-amber-600"></i> {{ $ad->badge_text ?? 'Kiwi Partner Promo' }}
+                       </span>
+                       <span class="text-[10px] bg-amber-200 text-amber-900 font-semibold px-2 py-0.5 rounded-full uppercase">Sponsored / Ad</span>
+                   </div>
+                   <div class="p-4">
+                       @if($ad->image_url)
+                       <div class="relative group overflow-hidden rounded-lg mb-3 bg-gray-900 flex items-center justify-center">
+                           <img src="{{ $ad->image_url }}" alt="{{ $ad->title }}" class="w-full h-auto object-contain max-h-64 transition-transform duration-500">
+                           <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded z-10">Limited Offer</span>
+                       </div>
+                       @endif
+                       <h4 class="font-bold text-gray-900 text-sm mb-1 line-clamp-1 hover:text-emerald-700 transition-colors">{{ $ad->title }}</h4>
+                       
+                       @if($ad->description)
+                       <p class="text-xs text-gray-700 mb-2 leading-relaxed">
+                           {{ $ad->description }}
+                       </p>
+                       @endif
 
-@forelse($dynamicAds as $ad)
-<div class="bg-white border border-amber-200 rounded-xl shadow-xs overflow-hidden news-card mb-4">
-    <div class="bg-amber-50 px-4 py-2 border-b border-amber-100 flex justify-between items-center">
-        <span class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-            <i class="fa-solid fa-bullhorn text-amber-600"></i> {{ $ad->badge_text ?? 'Kiwi Partner Promo' }}
-        </span>
-        <span class="text-[10px] bg-amber-200 text-amber-900 font-semibold px-2 py-0.5 rounded-full uppercase">Sponsored / Ad</span>
-    </div>
-    <div class="p-4">
-        @if($ad->image_url)
-        <div class="relative group overflow-hidden rounded-lg mb-3 bg-gray-900 flex items-center justify-center">
-    <img src="{{ $ad->image_url }}" alt="{{ $ad->title }}" class="w-full h-auto object-contain max-h-64 transition-transform duration-500">
-    <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded z-10">Limited Offer</span>
-</div>
-        @endif
-        <h4 class="font-bold text-gray-900 text-sm mb-1 line-clamp-1 hover:text-emerald-700 transition-colors">{{ $ad->title }}</h4>
-        
-        @if($ad->description)
-        <p class="text-xs text-gray-700 mb-2 leading-relaxed">
-            {{ $ad->description }}
-        </p>
-        @endif
+                       @if($ad->promo_code)
+                       <p class="text-xs text-gray-700 mb-3 leading-relaxed">
+                           Gamitin ang promo code na <strong class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{{ $ad->promo_code }}</strong>.
+                       </p>
+                       @endif
 
-        @if($ad->promo_code)
-        <p class="text-xs text-gray-700 mb-3 leading-relaxed">
-            Gamitin ang promo code na <strong class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{{ $ad->promo_code }}</strong>.
-        </p>
-        @endif
-
-        <a href="{{ $ad->button_link ?? '#' }}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg shadow-xs transition-all duration-200 flex items-center justify-center gap-2 group">
-            <span>{{ $ad->button_text ?? 'Alamin Pa' }}</span>
-            <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
-        </a>
-    </div>
-</div>
-@empty
-<!-- Kung walang ads, hindi na magpapakita ng lumang hardcode kundi malinis na mawawala -->
-@endforelse
+                       <a href="{{ $ad->button_link ?? '#' }}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg shadow-xs transition-all duration-200 flex items-center justify-center gap-2 group">
+                           <span>{{ $ad->button_text ?? 'Alamin Pa' }}</span>
+                           <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                       </a>
+                   </div>
+               </div>
+               @empty
+               @endforelse
 
                <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm news-card">
                    <h2 class="text-sm font-black border-b-2 border-emerald-700 pb-2 mb-3 uppercase tracking-wider text-gray-900 flex justify-between items-center">
@@ -296,9 +339,6 @@ document.addEventListener("DOMContentLoaded", function () {
                                    <div class="min-w-0 flex-1">
                                        <div class="flex items-center gap-1.5">
                                            <span class="text-[10px] font-bold text-emerald-700 uppercase">{{ $story->category }}</span>
-                                           <!-- @if(isset($story->views))
-                                               <span class="text-[9px] text-gray-400 font-semibold"><i class="fa-solid fa-eye mr-0.5"></i> {{ number_format($story->views) }}</span>
-                                           @endif -->
                                        </div>
                                        <h3 class="font-bold text-xs text-gray-900 hover:text-emerald-700 transition line-clamp-2 leading-snug">
                                            <a href="{{ route('news.show', $story->id) }}">{{ $story->title }}</a>
@@ -313,10 +353,8 @@ document.addEventListener("DOMContentLoaded", function () {
                </div>
            </div>
            @endif
-
        </div>
        @endif
-
 
        <!-- KUNG WALA PANG SEARCH O CATEGORY (DEFAULT HOMEPAGE VIEW) -->
        @if(!request('search') && (!request('category') || request('category') == ''))
@@ -420,48 +458,46 @@ document.addEventListener("DOMContentLoaded", function () {
            <!-- Sidebar Homepage -->
            <div class="w-full lg:w-1/3 flex flex-col gap-6">
                @php
-    // Kunin ang mga active ads mula sa database
-    $dynamicAds = \App\Models\Ad::latest()->get();
-@endphp
+                   $dynamicAds = \App\Models\Ad::latest()->get();
+               @endphp
 
-@forelse($dynamicAds as $ad)
-<div class="bg-white border border-amber-200 rounded-xl shadow-xs overflow-hidden news-card mb-4">
-    <div class="bg-amber-50 px-4 py-2 border-b border-amber-100 flex justify-between items-center">
-        <span class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-            <i class="fa-solid fa-bullhorn text-amber-600"></i> {{ $ad->badge_text ?? 'Kiwi Partner Promo' }}
-        </span>
-        <span class="text-[10px] bg-amber-200 text-amber-900 font-semibold px-2 py-0.5 rounded-full uppercase">Sponsored / Ad</span>
-    </div>
-    <div class="p-4">
-        @if($ad->image_url)
-        <div class="relative group overflow-hidden rounded-lg mb-3 bg-gray-900 flex items-center justify-center">
-    <img src="{{ $ad->image_url }}" alt="{{ $ad->title }}" class="w-full h-auto object-contain max-h-64 transition-transform duration-500">
-    <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded z-10">Limited Offer</span>
-</div>
-        @endif
-        <h4 class="font-bold text-gray-900 text-sm mb-1 line-clamp-1 hover:text-emerald-700 transition-colors">{{ $ad->title }}</h4>
-        
-        @if($ad->description)
-        <p class="text-xs text-gray-700 mb-2 leading-relaxed">
-            {{ $ad->description }}
-        </p>
-        @endif
+               @forelse($dynamicAds as $ad)
+               <div class="bg-white border border-amber-200 rounded-xl shadow-xs overflow-hidden news-card mb-4">
+                   <div class="bg-amber-50 px-4 py-2 border-b border-amber-100 flex justify-between items-center">
+                       <span class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                           <i class="fa-solid fa-bullhorn text-amber-600"></i> {{ $ad->badge_text ?? 'Kiwi Partner Promo' }}
+                       </span>
+                       <span class="text-[10px] bg-amber-200 text-amber-900 font-semibold px-2 py-0.5 rounded-full uppercase">Sponsored / Ad</span>
+                   </div>
+                   <div class="p-4">
+                       @if($ad->image_url)
+                       <div class="relative group overflow-hidden rounded-lg mb-3 bg-gray-900 flex items-center justify-center">
+                           <img src="{{ $ad->image_url }}" alt="{{ $ad->title }}" class="w-full h-auto object-contain max-h-64 transition-transform duration-500">
+                           <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded z-10">Limited Offer</span>
+                       </div>
+                       @endif
+                       <h4 class="font-bold text-gray-900 text-sm mb-1 line-clamp-1 hover:text-emerald-700 transition-colors">{{ $ad->title }}</h4>
+                       
+                       @if($ad->description)
+                       <p class="text-xs text-gray-700 mb-2 leading-relaxed">
+                           {{ $ad->description }}
+                       </p>
+                       @endif
 
-        @if($ad->promo_code)
-        <p class="text-xs text-gray-700 mb-3 leading-relaxed">
-            Gamitin ang promo code na <strong class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{{ $ad->promo_code }}</strong>.
-        </p>
-        @endif
+                       @if($ad->promo_code)
+                       <p class="text-xs text-gray-700 mb-3 leading-relaxed">
+                           Gamitin ang promo code na <strong class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{{ $ad->promo_code }}</strong>.
+                       </p>
+                       @endif
 
-        <a href="{{ $ad->button_link ?? '#' }}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg shadow-xs transition-all duration-200 flex items-center justify-center gap-2 group">
-            <span>{{ $ad->button_text ?? 'Alamin Pa' }}</span>
-            <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
-        </a>
-    </div>
-</div>
-@empty
-<!-- Kung walang ads, hindi na magpapakita ng lumang hardcode kundi malinis na mawawala -->
-@endforelse
+                       <a href="{{ $ad->button_link ?? '#' }}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg shadow-xs transition-all duration-200 flex items-center justify-center gap-2 group">
+                           <span>{{ $ad->button_text ?? 'Alamin Pa' }}</span>
+                           <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                       </a>
+                   </div>
+               </div>
+               @empty
+               @endforelse
 
                <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm news-card">
                    <h2 class="text-sm font-black border-b-2 border-emerald-700 pb-2 mb-3 uppercase tracking-wider text-gray-900 flex justify-between items-center">
@@ -484,9 +520,6 @@ document.addEventListener("DOMContentLoaded", function () {
                                    <div class="min-w-0 flex-1">
                                        <div class="flex items-center gap-1.5">
                                            <span class="text-[10px] font-bold text-emerald-700 uppercase">{{ $story->category }}</span>
-                                           <!-- @if(isset($story->views))
-                                               <span class="text-[9px] text-gray-400 font-semibold"><i class="fa-solid fa-eye mr-0.5"></i> {{ number_format($story->views) }}</span>
-                                           @endif -->
                                        </div>
                                        <h3 class="font-bold text-xs text-gray-900 hover:text-emerald-700 transition line-clamp-2 leading-snug">
                                            <a href="{{ route('news.show', $story->id) }}">{{ $story->title }}</a>
@@ -573,8 +606,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     </p>
                 </div>
                 <div>
-                    <form class="flex flex-col sm:flex-row gap-2.5">
-                        <input type="email" class="rounded-full py-2.5 px-5 text-sm text-gray-900 bg-white border-0 focus:outline-none w-full" placeholder="Ilagay ang iyong Email Address..." required>
+                    <form action="{{ route('newsletter.subscribe') }}" method="POST" class="flex flex-col sm:flex-row gap-2.5">
+                        @csrf
+                        <input type="email" name="email" class="rounded-full py-2.5 px-5 text-sm text-gray-900 bg-white border-0 focus:outline-none w-full" placeholder="Ilagay ang iyong Email Address..." required>
                         <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-full px-7 py-2.5 text-sm font-bold transition whitespace-nowrap">
                             Sumali Na <i class="fa-solid fa-arrow-right ml-1"></i>
                         </button>
@@ -610,7 +644,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 <p class="font-bold text-gray-900 text-xs uppercase tracking-wider mb-3 border-b border-gray-300 pb-1">Tulong at Impormasyon</p>
                 <ul class="text-xs space-y-2">
                     <li><a href="#" class="hover:text-emerald-700 transition">Tungkol sa Amin</a></li>
-                    <li><a href="#" class="hover:text-emerald-700 transition">Makipag-ugnayan</a></li>
+                    <li><button @click="openAdModal = true" class="hover:text-emerald-700 transition text-left">Mag-Advertise sa Amin</button></li>
                 </ul>
             </div>
             <div>
@@ -626,7 +660,134 @@ document.addEventListener("DOMContentLoaded", function () {
         </div>
     </footer>
 
+    <!-- FLOATING ACTION BUTTONS (BOTTOM RIGHT) -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+        <!-- ADVERTISE WITH US / EMAIL US BUTTON -->
+        <button @click="openAdModal = true"
+                class="group bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white p-3.5 rounded-full shadow-2xl flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none border-2 border-white"
+                title="Magpalagay ng Ad / Email Us">
+            <i class="fa-solid fa-rectangle-ad text-lg"></i>
+            <span class="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-300 text-xs font-bold pr-1">
+                Mag-Advertise Sa Amin
+            </span>
+        </button>
+
+        <!-- BACK TO TOP BUTTON -->
+        <button x-show="showScrollTop"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 scale-75"
+                x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 scale-75"
+                @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
+                class="bg-emerald-700 hover:bg-emerald-800 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-90 border-2 border-white focus:outline-none"
+                title="Bumalik sa Itaas">
+            <i class="fa-solid fa-arrow-up text-base"></i>
+        </button>
+    </div>
+
+    <!-- ADVERTISEMENT / EMAIL US MODAL -->
+    <div x-show="openAdModal"
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto"
+         style="display: none;">
+        <!-- Backdrop -->
+        <div x-show="openAdModal"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="openAdModal = false"
+             class="fixed inset-0 bg-black/60 backdrop-blur-xs"></div>
+
+        <!-- Modal Dialog -->
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div x-show="openAdModal"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+                 class="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden z-10 border border-gray-100">
+                
+                <!-- Modal Header -->
+                <div class="bg-gradient-to-r from-emerald-800 to-emerald-700 p-5 text-white flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                            <i class="fa-solid fa-bullhorn text-amber-300 text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-black text-lg leading-tight">Mag-Advertise sa Kiwi Batangas</h3>
+                            <p class="text-xs text-emerald-100">Ipaabot ang iyong negosyo sa libu-libong mamamayan!</p>
+                        </div>
+                    </div>
+                    <button @click="openAdModal = false" class="text-emerald-200 hover:text-white transition p-1">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Form -->
+                <form onsubmit="handleAdInquirySubmit(event)" class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Pangalan / Name <span class="text-red-500">*</span></label>
+                        <input type="text" id="ad_name" required placeholder="Juan Dela Cruz" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Pangalan ng Negosyo / Business</label>
+                            <input type="text" id="ad_company" placeholder="Hal. Batangas Bakery" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Contact Number</label>
+                            <input type="tel" id="ad_phone" placeholder="09123456789" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address <span class="text-red-500">*</span></label>
+                        <input type="email" id="ad_email" required placeholder="juan@example.com" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Detalye ng Ad Inquiry / Mensahe <span class="text-red-500">*</span></label>
+                        <textarea id="ad_message" rows="3" required placeholder="Ilarawan ang iyong gustong ilagay na advertisement o promo..." class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition"></textarea>
+                    </div>
+
+                    <div class="pt-2 flex items-center justify-end gap-3">
+                        <button type="button" @click="openAdModal = false" class="px-5 py-2.5 text-xs font-bold text-gray-600 hover:text-gray-800 transition">
+                            Kanselahin
+                        </button>
+                        <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Ipadala ang Email Inquiry</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 <script>
+    function handleAdInquirySubmit(e) {
+        e.preventDefault();
+        const name = document.getElementById('ad_name').value;
+        const company = document.getElementById('ad_company').value;
+        const phone = document.getElementById('ad_phone').value;
+        const email = document.getElementById('ad_email').value;
+        const message = document.getElementById('ad_message').value;
+
+        const mailtoRecipient = 'ads@kiwibatangas.com';
+        const subject = encodeURIComponent(`[Kiwi Batangas Ad Inquiry] - ${company || name}`);
+        const body = encodeURIComponent(`Magandang araw Kiwi Batangas Team,\n\nAko ay interesadong magpalagay ng Advertisement sa inyong website.\n\nMga Detalye:\n- Pangalan: ${name}\n- Negosyo: ${company || 'N/A'}\n- Email: ${email}\n- Contact Number: ${phone || 'N/A'}\n\nMensahe / Ad Details:\n${message}\n\nSalamat!`);
+
+        window.location.href = `mailto:${mailtoRecipient}?subject=${subject}&body=${body}`;
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         const observerOptions = { root: null, rootMargin: '0px', threshold: 0.1 };
         const observer = new IntersectionObserver((entries) => {
@@ -687,14 +848,13 @@ document.addEventListener("DOMContentLoaded", function () {
     fetchLiveExchangeRates();
 });
 
-    // FULLY DYNAMIC REAL-TIME WEATHER SCRIPT (No static hardcoded fallbacks)
+    // FULLY DYNAMIC REAL-TIME WEATHER SCRIPT
     document.addEventListener("DOMContentLoaded", function () {
         const locationEl = document.getElementById('weather-location');
         const tempEl = document.getElementById('weather-temp');
         const weatherIconEl = document.getElementById('weather-icon');
 
         function fetchWeatherByCoords(lat, lon) {
-            // Fetch live weather via Open-Meteo using real-time coordinates
             fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&temperature_unit=celsius`)
                 .then(response => response.json())
                 .then(data => {
@@ -716,7 +876,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .catch(err => console.error("Weather fetch error:", err));
 
-            // Fetch live reverse geocoding to dynamically resolve exact location name on the fly
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16&addressdetails=1`)
                 .then(response => response.json())
                 .then(geoData => {
@@ -745,7 +904,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         fetchWeatherByCoords(lat, lon);
                     }, 
                     function (error) {
-                        // If user blocks location or GPS fails, dynamically detect location via IP-API live network lookup instead of hardcoding text
                         fetch('https://ipapi.co/json/')
                             .then(res => res.json())
                             .then(ipData => {
@@ -767,10 +925,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
-        // Run immediately on load
         initLiveWeatherTracker();
-
-        // Automatically re-fetch and update live weather every 5 minutes dynamically
         setInterval(initLiveWeatherTracker, 300000);
     });
 </script>

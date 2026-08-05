@@ -4,8 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\Category;
+use App\Models\Subscriber;
+use App\Models\NewsletterSubscriber;
+use App\Notifications\NewArticleNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
+
 
 class AdminController extends Controller
 {
@@ -38,6 +43,9 @@ class AdminController extends Controller
 
         return view('admin.dashboard', [
             'totalArticles' => Article::count(),
+            'totalCategories' => $categories->count(),
+            'totalSubscribers' => NewsletterSubscriber::count(), // <-- Idinagdag ang kabuuang subscribers count
+            'subscribers' => NewsletterSubscriber::latest()->get(), // <-- Idinagdag ang listahan ng subscribers
             'categories' => $categories,
             'categoryCounts' => $categoryCounts, 
             'articles' => Article::latest()->paginate(10),
@@ -80,9 +88,16 @@ class AdminController extends Controller
         $validated['is_featured'] = $request->has('is_featured');
         $validated['is_breaking'] = $request->has('is_breaking');
 
-        Article::create($validated);
+        // I-save ang bagong balita
+        $article = Article::create($validated);
 
-        return back()->with('success', 'Matagumpay na nai-post ang balita kasama ang mga larawan!');
+        // Awtomatikong magpadala ng email sa lahat ng nag-subscribe sa newsletter
+        $subscribers = NewsletterSubscriber::all();
+        if ($subscribers->count() > 0) {
+            Notification::send($subscribers, new NewArticleNotification($article));
+        }
+
+        return back()->with('success', 'Matagumpay na nai-post ang balita at naipadala ang mga notification sa mga subscriber!');
     }
 
     public function editArticle($id)
@@ -168,7 +183,7 @@ class AdminController extends Controller
         ]);
 
         $category = Category::findOrFail($id);
-        $oldName = $category->name; // Kunin ang lumang pangalan bago i-update
+        $oldName = $category->name;
 
         $category->update([
             'name' => $request->name,
@@ -176,7 +191,6 @@ class AdminController extends Controller
             'sort_order' => $request->sort_order,
         ]);
 
-        // I-update din ang pangalan sa articles table para mag-sync agad
         Article::where('category', $oldName)->update([
             'category' => $request->name
         ]);
@@ -217,4 +231,40 @@ class AdminController extends Controller
             'articles' => Article::latest()->paginate(8),
         ]);
     }
+
+    public function toggleSubscriberBlock($id)
+{
+    $subscriber = Subscriber::find($id);
+
+    if (!$subscriber) {
+        return redirect()->to(url()->previous() . '#subscribers')
+            ->with('error', 'Hindi mahanap ang subscriber na ito.');
+    }
+
+    $subscriber->is_blocked = !$subscriber->is_blocked;
+    $subscriber->save();
+
+    $statusMessage = $subscriber->is_blocked ? 'na-block' : 'na-unblock';
+
+    return redirect()->to(url()->previous() . '#subscribers')
+        ->with('success', "Matagumpay na {$statusMessage} ang subscriber.");
+}
+
+    /**
+     * Burahin / I-unsubscribe ang subscriber account.
+     */
+public function destroySubscriber($id)
+{
+    $subscriber = Subscriber::find($id);
+
+    if (!$subscriber) {
+        return redirect()->to(url()->previous() . '#subscribers')
+            ->with('error', 'Hindi mahanap ang subscriber na ito o nabura na.');
+    }
+
+    $subscriber->delete();
+
+    return redirect()->to(url()->previous() . '#subscribers')
+        ->with('success', 'Matagumpay na na-unsubscribe at nabura ang subscriber.');
+}
 }

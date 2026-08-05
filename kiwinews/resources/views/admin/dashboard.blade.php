@@ -36,6 +36,9 @@
                     <a href="#categories" onclick="switchTab('categories')" id="nav-categories" class="nav-tab px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition-all flex items-center gap-2">
                         <i class="fa-solid fa-folder-tree"></i> Kategorya
                     </a>
+                    <a href="#subscribers" onclick="switchTab('subscribers')" id="nav-subscribers" class="nav-tab px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-users"></i> Subscribers
+                    </a>
                     <a href="#ads" onclick="switchTab('ads')" id="nav-ads" class="nav-tab px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition-all flex items-center gap-2">
                         <i class="fa-solid fa-bullhorn"></i> Ads Management
                     </a>
@@ -78,7 +81,8 @@
             <!-- TAB 1: DASHBOARD OVERVIEW -->
             <div id="tab-dashboard" class="tab-content space-y-6">
                 <!-- TOP CARDS GRID -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- CARD 1: KABUUANG BALITA -->
                     <div class="bg-gradient-to-br from-lime-400 to-emerald-500 text-slate-900 p-7 rounded-3xl shadow-xl shadow-lime-500/10 relative overflow-hidden flex flex-col justify-between">
                         <div class="flex justify-between items-start">
                             <div>
@@ -94,11 +98,12 @@
                         </div>
                     </div>
 
+                    <!-- CARD 2: TOTAL CATEGORIES -->
                     <div class="bg-white p-7 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
                         <div class="flex justify-between items-start">
                             <div>
                                 <span class="text-xs font-black uppercase tracking-wider text-slate-400">Total Categories</span>
-                                <h3 class="text-4xl font-black mt-2 text-slate-900">{{ isset($categories) ? count($categories) : 0 }}</h3>
+                                <h3 class="text-4xl font-black mt-2 text-slate-900">{{ isset($totalCategories) ? $totalCategories : (isset($categories) ? count($categories) : 0) }}</h3>
                             </div>
                             <div class="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
                                 <i class="fa-solid fa-folder"></i>
@@ -106,6 +111,22 @@
                         </div>
                         <div class="mt-6 flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full w-fit text-xs font-bold">
                             <i class="fa-solid fa-check"></i> Standard Data
+                        </div>
+                    </div>
+
+                    <!-- CARD 3: TOTAL SUBSCRIBERS -->
+                    <div onclick="switchTab('subscribers')" class="bg-white p-7 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col justify-between cursor-pointer hover:border-emerald-500 transition-all">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs font-black uppercase tracking-wider text-slate-400">Newsletter Subscribers</span>
+                                <h3 class="text-4xl font-black mt-2 text-slate-900">{{ isset($totalSubscribers) ? $totalSubscribers : 0 }}</h3>
+                            </div>
+                            <div class="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full w-fit text-xs font-bold">
+                            <i class="fa-solid fa-envelope"></i> Active Email Subscribers
                         </div>
                     </div>
                 </div>
@@ -138,68 +159,67 @@
             </div>
 
             <!-- TAB 2: ARTICLES MANAGEMENT TABLE -->
-<div id="tab-articles" class="tab-content hidden space-y-6">
-    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden p-7">
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h3 class="font-extrabold text-slate-900 text-sm uppercase tracking-wider">Pamamahala ng mga Artikulo</h3>
-                <p class="text-xs text-slate-400 mt-1">Listahan ng lahat ng balitang na-publish sa sistema.</p>
-            </div>
-            <button onclick="openNewsModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold px-5 py-3 rounded-2xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer flex items-center gap-2">
-                <i class="fa-solid fa-plus text-sm"></i> Bagong Balita
-            </button>
-        </div>
+            <div id="tab-articles" class="tab-content hidden space-y-6">
+                <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden p-7">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="font-extrabold text-slate-900 text-sm uppercase tracking-wider">Pamamahala ng mga Artikulo</h3>
+                            <p class="text-xs text-slate-400 mt-1">Listahan ng lahat ng balitang na-publish sa sistema.</p>
+                        </div>
+                        <button onclick="openNewsModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold px-5 py-3 rounded-2xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer flex items-center gap-2">
+                            <i class="fa-solid fa-plus text-sm"></i> Bagong Balita
+                        </button>
+                    </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-xs">
-                <thead>
-                    <tr class="bg-slate-50 text-slate-400 uppercase text-[11px] tracking-wider border-b border-slate-200">
-                        <th class="py-4 px-5 font-bold">ID</th>
-                        <th class="py-4 px-5 font-bold">Pamagat</th>
-                        <th class="py-4 px-5 font-bold">Kategorya</th>
-                        <th class="py-4 px-5 font-bold">Uri</th>
-                        <th class="py-4 px-5 font-bold text-right">Aksyon</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @isset($articles)
-                        @forelse($articles as $art)
-                            <tr class="hover:bg-slate-50/60 transition-all text-xs">
-                                <td class="py-4 px-5 font-bold text-slate-400">#{{ $art->id }}</td>
-                                <td class="py-4 px-5 font-bold text-slate-900 max-w-xs truncate text-sm">{{ $art->title }}</td>
-                                <!-- DITO ANG PAGBABAGO: Ginamit ang categoryRecord->name para mag-update real-time kung binago ni admin -->
-                                <td class="py-4 px-5">
-                                    <span class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-xl font-bold">
-                                        {{ $art->categoryRecord->name ?? $art->category }}
-                                    </span>
-                                </td>
-                                <td class="py-4 px-5">
-                                    <div class="flex gap-2">
-                                        @if($art->is_featured)<span class="bg-emerald-100 text-emerald-800 text-[10px] px-2.5 py-1 rounded-md font-bold">Featured</span>@endif
-                                        @if($art->is_breaking)<span class="bg-rose-100 text-rose-800 text-[10px] px-2.5 py-1 rounded-md font-bold">Breaking</span>@endif
-                                    </div>
-                                </td>
-                                <td class="py-4 px-5 text-right space-x-2">
-                                    <a href="{{ route('news.show', $art->id) }}" target="_blank" class="text-slate-400 hover:text-emerald-600 p-1.5 transition-all text-sm" title="Tingnan"><i class="fa-solid fa-eye"></i></a>
-                                    <button onclick="openEditModal({{ $art->id }})" class="text-emerald-600 hover:text-emerald-700 font-bold p-1.5 transition-all cursor-pointer text-sm" title="I-edit"><i class="fa-solid fa-pen-to-square"></i></button>
-                                    <form action="{{ route('admin.articles.destroy', $art->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Sigurado ka bang gusto mong burahin ang balitang ito?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold p-1.5 transition-all cursor-pointer text-sm" title="Burahin"><i class="fa-solid fa-trash"></i></button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="py-8 text-center text-slate-400 font-medium text-sm">Walang makitang mga artikulo.</td>
-                            </tr>
-                        @endforelse
-                    @endisset
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-400 uppercase text-[11px] tracking-wider border-b border-slate-200">
+                                    <th class="py-4 px-5 font-bold">ID</th>
+                                    <th class="py-4 px-5 font-bold">Pamagat</th>
+                                    <th class="py-4 px-5 font-bold">Kategorya</th>
+                                    <th class="py-4 px-5 font-bold">Uri</th>
+                                    <th class="py-4 px-5 font-bold text-right">Aksyon</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @isset($articles)
+                                    @forelse($articles as $art)
+                                        <tr class="hover:bg-slate-50/60 transition-all text-xs">
+                                            <td class="py-4 px-5 font-bold text-slate-400">#{{ $art->id }}</td>
+                                            <td class="py-4 px-5 font-bold text-slate-900 max-w-xs truncate text-sm">{{ $art->title }}</td>
+                                            <td class="py-4 px-5">
+                                                <span class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-xl font-bold">
+                                                    {{ $art->categoryRecord->name ?? $art->category }}
+                                                </span>
+                                            </td>
+                                            <td class="py-4 px-5">
+                                                <div class="flex gap-2">
+                                                    @if($art->is_featured)<span class="bg-emerald-100 text-emerald-800 text-[10px] px-2.5 py-1 rounded-md font-bold">Featured</span>@endif
+                                                    @if($art->is_breaking)<span class="bg-rose-100 text-rose-800 text-[10px] px-2.5 py-1 rounded-md font-bold">Breaking</span>@endif
+                                                </div>
+                                            </td>
+                                            <td class="py-4 px-5 text-right space-x-2">
+                                                <a href="{{ route('news.show', $art->id) }}" target="_blank" class="text-slate-400 hover:text-emerald-600 p-1.5 transition-all text-sm" title="Tingnan"><i class="fa-solid fa-eye"></i></a>
+                                                <button onclick="openEditModal({{ $art->id }})" class="text-emerald-600 hover:text-emerald-700 font-bold p-1.5 transition-all cursor-pointer text-sm" title="I-edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                                                <form action="{{ route('admin.articles.destroy', $art->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Sigurado ka bang gusto mong burahin ang balitang ito?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold p-1.5 transition-all cursor-pointer text-sm" title="Burahin"><i class="fa-solid fa-trash"></i></button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="py-8 text-center text-slate-400 font-medium text-sm">Walang makitang mga artikulo.</td>
+                                        </tr>
+                                    @endforelse
+                                @endisset
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
             <!-- TAB 3: CATEGORIES MANAGEMENT (DRAG & DROP) -->
             <div id="tab-categories" class="tab-content hidden space-y-6">
@@ -234,7 +254,6 @@
                                         </div>
                                         <div>
                                             <span class="text-xs font-bold text-slate-800 block">{{ $cat->name }}</span>
-                                            <!-- <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold mt-1 inline-block">Order: <span class="order-badge">{{ $cat->sort_order }}</span></span> -->
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-1">
@@ -252,7 +271,92 @@
                 </div>
             </div>
 
-            <!-- TAB 4: ADS MANAGEMENT -->
+            <!-- TAB 4: SUBSCRIBERS MANAGEMENT (NAG-AALOK NG BLOCK & STOP SUBSCRIPTION) -->
+            <div id="tab-subscribers" class="tab-content hidden space-y-6">
+                <div class="bg-white p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-extrabold text-slate-900 text-sm uppercase tracking-wider text-emerald-700 flex items-center gap-2">
+                                <i class="fa-solid fa-users text-emerald-600"></i> Mga Subscriber ng Newsletter
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-1">Pamahalaan ang mga subscriber. Maaaring i-block o tanggalin ang kanilang subscription.</p>
+                        </div>
+                        <span class="bg-emerald-100 text-emerald-800 text-xs px-3.5 py-1.5 rounded-full font-bold">
+                            {{ isset($totalSubscribers) ? $totalSubscribers : 0 }} Total Subscribers
+                        </span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-400 uppercase text-[11px] tracking-wider border-b border-slate-200">
+                                    <th class="py-3.5 px-4 font-bold">Email Address</th>
+                                    <th class="py-3.5 px-4 font-bold">Status</th>
+                                    <th class="py-3.5 px-4 font-bold">Petsa ng Pag-subscribe</th>
+                                    <th class="py-3.5 px-4 font-bold text-right">Aksyon</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @isset($subscribers)
+                                    @forelse($subscribers as $sub)
+                                        <tr class="hover:bg-slate-50/60 transition-all text-xs">
+                                            <td class="py-3.5 px-4 font-bold text-slate-800 flex items-center gap-2">
+                                                <i class="fa-regular fa-envelope text-emerald-600"></i>
+                                                {{ $sub->email }}
+                                            </td>
+                                            <td class="py-3.5 px-4">
+                                                @if(isset($sub->is_blocked) && $sub->is_blocked)
+                                                    <span class="bg-rose-100 text-rose-800 text-[10px] px-2.5 py-1 rounded-md font-bold">
+                                                        <i class="fa-solid fa-ban mr-1"></i> Blocked
+                                                    </span>
+                                                @else
+                                                    <span class="bg-emerald-100 text-emerald-800 text-[10px] px-2.5 py-1 rounded-md font-bold">
+                                                        <i class="fa-solid fa-check mr-1"></i> Active
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="py-3.5 px-4 text-slate-500 font-medium">
+                                                {{ $sub->created_at ? $sub->created_at->format('M d, Y - h:i A') : 'N/A' }}
+                                            </td>
+                                            <td class="py-3.5 px-4 text-right space-x-2">
+                                                <!-- TOGGLE BLOCK / UNBLOCK -->
+                                                <form action="{{ route('admin.subscribers.toggle-block', $sub->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Sigurado ka bang gusto mong baguhin ang status ng subscriber na ito?');">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    @if(isset($sub->is_blocked) && $sub->is_blocked)
+                                                        <button type="submit" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold px-3 py-1.5 rounded-xl border border-emerald-200 transition-all cursor-pointer">
+                                                            <i class="fa-solid fa-unlock mr-1"></i> Unblock
+                                                        </button>
+                                                    @else
+                                                        <button type="submit" class="bg-amber-50 hover:bg-amber-100 text-amber-700 text-[11px] font-bold px-3 py-1.5 rounded-xl border border-amber-200 transition-all cursor-pointer">
+                                                            <i class="fa-solid fa-ban mr-1"></i> Block Account
+                                                        </button>
+                                                    @endif
+                                                </form>
+
+                                                <!-- STOP SUBSCRIPTION / DELETE -->
+                                                <form action="{{ route('admin.subscribers.destroy', $sub->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Sigurado ka bang gusto mong alisin/ipahinto ang subscription ng email na ito?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold px-3 py-1.5 rounded-xl border border-rose-200 transition-all cursor-pointer" title="I-unsubscribe / Burahin">
+                                                        <i class="fa-solid fa-user-xmark mr-1"></i> Unsubscribe
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="py-6 text-center text-slate-400 font-medium text-xs">Wala pang nag-susubscribe.</td>
+                                        </tr>
+                                    @endforelse
+                                @endisset
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: ADS MANAGEMENT -->
             <div id="tab-ads" class="tab-content hidden space-y-6">
                 <div class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm">
                     <div class="flex justify-between items-center mb-6">
@@ -341,7 +445,7 @@
                 </div>
             </div>
 
-            <!-- TAB 5: SYSTEM ANALYTICS -->
+            <!-- TAB 6: SYSTEM ANALYTICS -->
             <div id="tab-analytics" class="tab-content hidden space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
                     <div class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm">
@@ -353,7 +457,7 @@
                                 @foreach($categories as $cat)
                                     @php
                                         $count = isset($categoryCounts[$cat->name]) ? $categoryCounts[$cat->name] : 0;
-                                        $percentage = ($totalArticles > 0) ? ($count / $totalArticles) * 100 : 0;
+                                        $percentage = (isset($totalArticles) && $totalArticles > 0) ? ($count / $totalArticles) * 100 : 0;
                                     @endphp
                                     <div>
                                         <div class="flex justify-between font-bold mb-2 text-slate-700 text-xs">
@@ -680,7 +784,6 @@
                     animation: 150,
                     ghostClass: 'bg-emerald-100',
                     onEnd: function () {
-                        // Automatically update visual order number badges in real-time
                         document.querySelectorAll('#sortable-categories .category-card').forEach((card, index) => {
                             const badge = card.querySelector('.order-badge');
                             if (badge) badge.innerText = index + 1;
@@ -690,79 +793,72 @@
             }
         });
 
-        // Function para i-save ang pagkakasunod-sunod na may Confirmation Modal at Tamang Tab retention
-function saveCategoryOrder() {
-    // Buksan muna ang ating custom confirmation modal (o maaari ring gamitin ang Tailwind modal)
-    let orderData = [];
-    document.querySelectorAll('#sortable-categories .category-card').forEach((card, index) => {
-        orderData.push({
-            id: card.getAttribute('data-id'),
-            sort_order: index + 1
-        });
-    });
+        function saveCategoryOrder() {
+            let orderData = [];
+            document.querySelectorAll('#sortable-categories .category-card').forEach((card, index) => {
+                orderData.push({
+                    id: card.getAttribute('data-id'),
+                    sort_order: index + 1
+                });
+            });
 
-    fetch("{{ route('admin.categories.reorder') }}", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ order: orderData })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if(data.success) {
-            // Gumawa ng magandang Confirmation Modal sa screen
-            showConfirmationModal("Matagumpay na na-save ang pagkakasunod-sunod ng kategorya!");
-        } else {
-            showConfirmationModal("May naganap na error. Subukang muli.", true);
+            fetch("{{ route('admin.categories.reorder') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ order: orderData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    showConfirmationModal("Matagumpay na na-save ang pagkakasunod-sunod ng kategorya!");
+                } else {
+                    showConfirmationModal("May naganap na error. Subukang muli.", true);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showConfirmationModal("May naganap na error sa koneksyon.", true);
+            });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showConfirmationModal("May naganap na error sa koneksyon.", true);
-    });
-}
 
-// Custom Modal Confirmation Popup (Pamalit sa alert at toast)
-function showConfirmationModal(message, isError = false) {
-    // Alisin muna kung may umiiral na modal para hindi magpatong-patong
-    let existing = document.getElementById('custom-alert-modal');
-    if (existing) existing.remove();
+        function showConfirmationModal(message, isError = false) {
+            let existing = document.getElementById('custom-alert-modal');
+            if (existing) existing.remove();
 
-    let modalHTML = `
-        <div id="custom-alert-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all">
-            <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border border-slate-100 p-6 text-center space-y-4">
-                <div class="w-12 h-12 mx-auto rounded-full flex items-center justify-center ${isError ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'}">
-                    <i class="fa-solid ${isError ? 'fa-triangle-exclamation' : 'fa-check'} text-lg"></i>
+            let modalHTML = `
+                <div id="custom-alert-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all">
+                    <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border border-slate-100 p-6 text-center space-y-4">
+                        <div class="w-12 h-12 mx-auto rounded-full flex items-center justify-center ${isError ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'}">
+                            <i class="fa-solid ${isError ? 'fa-triangle-exclamation' : 'fa-check'} text-lg"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-slate-900 text-base">Paalala</h4>
+                            <p class="text-xs text-slate-500 mt-1">${message}</p>
+                        </div>
+                        <button type="button" onclick="reloadToCategoriesTab()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-2xl text-xs transition-all cursor-pointer shadow-md">
+                            OK
+                        </button>
+                    </div>
                 </div>
-                <div>
-                    <h4 class="font-black text-slate-900 text-base">Paalala</h4>
-                    <p class="text-xs text-slate-500 mt-1">${message}</p>
-                </div>
-                <button type="button" onclick="reloadToCategoriesTab()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-2xl text-xs transition-all cursor-pointer shadow-md">
-                    OK
-                </button>
-            </div>
-        </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-}
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
 
-// Function para mag-reload habang nananatili sa #categories tab
-function reloadToCategoriesTab() {
-    window.location.href = "{{ route('admin.dashboard') }}#categories";
-    location.reload();
-}
+        function reloadToCategoriesTab() {
+            window.location.href = "{{ route('admin.dashboard') }}#categories";
+            location.reload();
+        }
 
-// Auto-switch tab kapag may kasamang hash sa URL (Hal: /admin/dashboard#categories)
-document.addEventListener("DOMContentLoaded", function () {
-    let hash = window.location.hash;
-    if (hash) {
-        let tabName = hash.replace('#', '');
-        switchTab(tabName);
-    }
-});
+        document.addEventListener("DOMContentLoaded", function () {
+            let hash = window.location.hash;
+            if (hash) {
+                let tabName = hash.replace('#', '');
+                switchTab(tabName);
+            }
+        });
 
         const ctx = document.getElementById('performanceChart').getContext('2d');
         const chartData = {
@@ -820,7 +916,6 @@ document.addEventListener("DOMContentLoaded", function () {
         function openNewsModal() { document.getElementById('newsModal').classList.remove('hidden'); }
         function closeNewsModal() { document.getElementById('newsModal').classList.add('hidden'); }
 
-        // Category Edit Handlers
         function openEditCategoryModal(id, name, sortOrder) {
             document.getElementById('editCategoryForm').action = `/admin/categories/${id}`;
             document.getElementById('edit_cat_name').value = name;
@@ -852,7 +947,6 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('editArticleModal').classList.add('hidden');
         }
 
-        // Ad Modals Handlers
         function openAdModal() { document.getElementById('adModal').classList.remove('hidden'); }
         function closeAdModal() { document.getElementById('adModal').classList.add('hidden'); }
 
