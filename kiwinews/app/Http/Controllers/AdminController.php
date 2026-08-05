@@ -11,15 +11,15 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
-        $categories = Category::all();
+        // Kunin ang mga kategorya na naka-order base sa sort_order
+        $categories = Category::orderBy('sort_order', 'asc')->get();
         $categoryCounts = [];
 
         foreach ($categories as $cat) {
             $categoryCounts[$cat->name] = Article::where('category', $cat->name)->count();
         }
 
-        // Kunin ang huling 7 araw para sa Daily Graph kasama ang totoong views (Halimbawa gamit ang created_at o view logs)
-        // Para sa simple at direktang approach gamit ang kasalukuyang articles table:
+        // Kunin ang huling 7 araw para sa Daily Graph kasama ang totoong views
         $dailyLabels = [];
         $dailyValues = [];
 
@@ -27,7 +27,6 @@ class AdminController extends Controller
             $date = now()->subDays($i);
             $dailyLabels[] = $date->format('D'); // Halimbawa: Mon, Tue, Wed
             
-            // Kunin ang sum ng daily_views o kaya ay mga artikulong ginawa/binisita sa araw na iyon
             $viewsSum = Article::whereDate('updated_at', $date->toDateString())->sum('daily_views');
             $dailyValues[] = $viewsSum ?: 0;
         }
@@ -85,14 +84,12 @@ class AdminController extends Controller
         return back()->with('success', 'Matagumpay na nai-post ang balita kasama ang mga larawan!');
     }
 
-    // Ibalik ang JSON data ng artikulo para sa edit modal
     public function editArticle($id)
     {
         $article = Article::findOrFail($id);
         return response()->json($article);
     }
 
-    // I-update ang detalye ng artikulo
     public function updateArticle(Request $request, $id)
     {
         $article = Article::findOrFail($id);
@@ -138,7 +135,6 @@ class AdminController extends Controller
         return back()->with('success', 'Matagumpay na na-update ang balita!');
     }
 
-    // I-delete ang artikulo
     public function destroyArticle($id)
     {
         $article = Article::findOrFail($id);
@@ -147,18 +143,39 @@ class AdminController extends Controller
         return back()->with('success', 'Matagumpay na na-delete ang balita!');
     }
 
+    // MAGDAGDAG NG KATEGORYA MAY KASAMANG SORT ORDER
     public function storeCategory(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:categories,name',
+            'sort_order' => 'nullable|integer',
         ]);
 
         Category::create([
             'name' => $request->name,
             'slug' => Str::slug($request->name),
+            'sort_order' => $request->sort_order ?? 0,
         ]);
 
         return back()->with('success', 'Matagumpay na naidagdag ang bagong kategorya!');
+    }
+
+    // I-UPDATE ANG KATEGORYA AT SORT ORDER
+    public function updateCategory(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name,' . $id,
+            'sort_order' => 'required|integer',
+        ]);
+
+        $category = Category::findOrFail($id);
+        $category->update([
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+            'sort_order' => $request->sort_order,
+        ]);
+
+        return back()->with('success', 'Matagumpay na na-update ang kategorya!');
     }
 
     public function destroyCategory($id)
@@ -169,7 +186,21 @@ class AdminController extends Controller
         return back()->with('success', 'Matagumpay na na-delete ang kategorya!');
     }
 
-   public function index()
+    // <--- Idinagdag para i-save ang bagong pagkakasunod-sunod galing sa Drag & Drop
+    public function reorderCategories(Request $request)
+    {
+        if ($request->has('order')) {
+            foreach ($request->order as $item) {
+                Category::where('id', $item['id'])->update([
+                    'sort_order' => $item['sort_order']
+                ]);
+            }
+            return response()->json(['success' => true]);
+        }
+        return response()->json(['success' => false], 400);
+    }
+
+    public function index()
     {
         $featuredStoriesCount = Article::where('is_featured', true)->count();
         

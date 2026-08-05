@@ -43,27 +43,89 @@
         </h1>
 
         @php
-            $carouselImages = [];
+            function resolveMediaUrl($url) {
+                if (empty($url)) {
+                    return null;
+                }
+
+                if (preg_match('/^https?:\/\//i', $url)) {
+                    return $url;
+                }
+
+                return asset('storage/' . ltrim($url, '/'));
+            }
+
+            $carouselMedia = [];
+            $seenMedia = [];
+
             if ($article->image_url) {
-                $carouselImages[] = $article->image_url;
+                $imageUrl = resolveMediaUrl($article->image_url);
+                if ($imageUrl && !isset($seenMedia[$imageUrl])) {
+                    $seenMedia[$imageUrl] = true;
+                    $carouselMedia[] = ['type' => 'image', 'src' => $imageUrl];
+                }
             }
+
             if (is_array($article->images)) {
-                $carouselImages = array_merge($carouselImages, $article->images);
+                foreach ($article->images as $image) {
+                    $imageUrl = resolveMediaUrl($image);
+                    if ($imageUrl && !isset($seenMedia[$imageUrl])) {
+                        $seenMedia[$imageUrl] = true;
+                        $carouselMedia[] = ['type' => 'image', 'src' => $imageUrl];
+                    }
+                }
             }
-            $carouselImages = array_values(array_filter(array_unique($carouselImages)));
+
+            if (!empty($article->video_url)) {
+                $videoUrl = resolveMediaUrl($article->video_url);
+                $isYoutube = str_contains($videoUrl, 'youtube.com') || str_contains($videoUrl, 'youtu.be');
+                $videoType = 'video';
+                $videoId = null;
+
+                if ($isYoutube) {
+                    if (str_contains($videoUrl, 'youtube.com')) {
+                        parse_str(parse_url($videoUrl, PHP_URL_QUERY) ?? '', $queryParams);
+                        $videoId = $queryParams['v'] ?? null;
+                    }
+
+                    if (!$videoId && str_contains($videoUrl, 'youtu.be')) {
+                        $videoId = ltrim(parse_url($videoUrl, PHP_URL_PATH), '/');
+                    }
+
+                    if ($videoId) {
+                        $videoType = 'youtube';
+                    }
+                }
+
+                if ($videoUrl && !isset($seenMedia[$videoUrl])) {
+                    $seenMedia[$videoUrl] = true;
+                    $carouselMedia[] = ['type' => $videoType, 'src' => $videoUrl, 'videoId' => $videoId];
+                }
+            }
         @endphp
 
-        @if(count($carouselImages))
-            <div class="relative w-full rounded-xl overflow-hidden mb-6">
+        @if(count($carouselMedia))
+            <div class="relative w-full rounded-xl overflow-hidden mb-3">
                 <div id="carouselTrack" class="flex transition-transform duration-500" style="transform: translateX(0%);">
-                    @foreach($carouselImages as $index => $image)
+                    @foreach($carouselMedia as $index => $media)
                         <div class="min-w-full flex items-center justify-center bg-gray-950">
-                            <img src="{{ $image }}" alt="{{ $article->title }} image {{ $index + 1 }}" class="w-full h-auto object-contain max-h-[550px]">
+                            @if($media['type'] === 'image')
+                                <img src="{{ $media['src'] }}" alt="{{ $article->title }} media {{ $index + 1 }}" class="w-full h-auto object-contain max-h-[550px]">
+                            @elseif($media['type'] === 'youtube')
+                                <div class="relative w-full overflow-hidden rounded-3xl" style="padding-top:56.25%;">
+                                    <iframe src="https://www.youtube.com/embed/{{ $media['videoId'] }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="absolute inset-0 w-full h-full"></iframe>
+                                </div>
+                            @else
+                                <video controls class="w-full rounded-3xl bg-black">
+                                    <source src="{{ $media['src'] }}">
+                                    Your browser does not support the video tag.
+                                </video>
+                            @endif
                         </div>
                     @endforeach
                 </div>
 
-                @if(count($carouselImages) > 1)
+                @if(count($carouselMedia) > 1)
                     <button id="carouselPrev" type="button" class="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 text-gray-900 p-2 shadow-sm hover:bg-white focus:outline-none">
                         <i class="fa-solid fa-chevron-left"></i>
                     </button>
@@ -71,19 +133,19 @@
                         <i class="fa-solid fa-chevron-right"></i>
                     </button>
                     <div class="absolute inset-x-0 bottom-3 flex justify-center gap-2">
-                        @foreach($carouselImages as $index => $image)
+                        @foreach($carouselMedia as $index => $media)
                             <button type="button" class="w-2.5 h-2.5 rounded-full bg-white/50" data-carousel-index="{{ $index }}" aria-label="Slide {{ $index + 1 }}"></button>
                         @endforeach
                     </div>
                 @endif
             </div>
 
-            @if(count($carouselImages) > 1)
+            @if(count($carouselMedia) > 1)
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
                         const track = document.getElementById('carouselTrack');
                         const indicators = Array.from(document.querySelectorAll('[data-carousel-index]'));
-                        const totalSlides = {{ count($carouselImages) }};
+                        const totalSlides = {{ count($carouselMedia) }};
                         let currentSlide = 0;
 
                         const updateCarousel = (index) => {
@@ -107,41 +169,11 @@
             @endif
         @endif
 
-        @if(!empty($article->video_url))
-            <div class="mb-6">
-                @php
-                    $isYoutube = str_contains($article->video_url, 'youtube.com') || str_contains($article->video_url, 'youtu.be');
-                @endphp
-
-                @if($isYoutube)
-                    @php
-                        $videoId = '';
-                        if (str_contains($article->video_url, 'youtube.com')) {
-                            parse_str(parse_url($article->video_url, PHP_URL_QUERY) ?? '', $queryParams);
-                            $videoId = $queryParams['v'] ?? '';
-                        }
-                        if (!$videoId && str_contains($article->video_url, 'youtu.be')) {
-                            $videoId = ltrim(parse_url($article->video_url, PHP_URL_PATH), '/');
-                        }
-                    @endphp
-
-                    @if($videoId)
-                        <div class="relative w-full overflow-hidden rounded-3xl bg-black" style="padding-top:56.25%;">
-                            <iframe src="https://www.youtube.com/embed/{{ $videoId }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="absolute inset-0 w-full h-full"></iframe>
-                        </div>
-                    @else
-                        <video controls class="w-full rounded-3xl bg-black">
-                            <source src="{{ $article->video_url }}">
-                            Your browser does not support the video tag.
-                        </video>
-                    @endif
-                @else
-                    <video controls class="w-full rounded-3xl bg-black">
-                        <source src="{{ $article->video_url }}">
-                        Your browser does not support the video tag.
-                    </video>
-                @endif
-            </div>
+        <!-- MAIKLING BUOD (EXCERPT) - Sakto sa ibaba ng larawan, maliit, hindi madilim ang kulay, at may malambot na estilo -->
+        @if(!empty($article->excerpt))
+            <p class="text-xs md:text-sm text-gray-500 italic mb-6 leading-relaxed border-l-2 border-emerald-600 pl-3">
+                {{ $article->excerpt }}
+            </p>
         @endif
 
         <!-- Article Body / Full Info -->

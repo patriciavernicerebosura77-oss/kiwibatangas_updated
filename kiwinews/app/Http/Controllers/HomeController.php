@@ -13,6 +13,9 @@ class HomeController extends Controller
         $search = $request->input('search');
         $category = $request->input('category');
 
+        // Kunin ang mga kategorya na naka-sort base sa iyong Drag & Drop order sa Admin Dashboard
+        $categories = Category::orderBy('sort_order', 'asc')->get();
+
         // Breaking news
         $breakingNews = Article::orderBy('created_at', 'desc')->take(5)->get();
 
@@ -54,6 +57,7 @@ class HomeController extends Controller
         }
 
         return view('home', compact(
+            'categories',
             'breakingNews',
             'featuredStory',
             'featuredStories',

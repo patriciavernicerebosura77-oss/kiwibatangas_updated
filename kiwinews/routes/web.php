@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\Admin\AdController;
 
 // Route para sa Single News Page
 Route::get('/news/{id}', [NewsController::class, 'show'])->name('news.show');
@@ -50,6 +51,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Dashboard Route
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
+    // Ads Management Resource Route
+    Route::resource('ads', AdController::class);
+
     // Articles Management Routes
     Route::post('/articles', [AdminController::class, 'storeArticle'])->name('articles.store');
     Route::get('/articles/{id}/edit', [AdminController::class, 'editArticle'])->name('articles.edit');
@@ -58,5 +62,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     // Categories Management Routes
     Route::post('/categories', [AdminController::class, 'storeCategory'])->name('categories.store');
+    Route::put('/categories/{id}', [AdminController::class, 'updateCategory'])->name('categories.update');
     Route::delete('/categories/{id}', [AdminController::class, 'destroyCategory'])->name('categories.destroy');
+    
+    // <--- Idinagdag para sa Drag & Drop Category Reordering
+    Route::post('/categories/reorder', [AdminController::class, 'reorderCategories'])->name('categories.reorder');
 });

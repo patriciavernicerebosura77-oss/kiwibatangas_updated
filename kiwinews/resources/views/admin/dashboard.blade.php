@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Include SortableJS for Drag and Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="bg-[#f8fafc] text-slate-800 font-sans text-sm selection:bg-emerald-500 selection:text-white">
 
@@ -32,6 +35,9 @@
                     </a>
                     <a href="#categories" onclick="switchTab('categories')" id="nav-categories" class="nav-tab px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition-all flex items-center gap-2">
                         <i class="fa-solid fa-folder-tree"></i> Kategorya
+                    </a>
+                    <a href="#ads" onclick="switchTab('ads')" id="nav-ads" class="nav-tab px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-bullhorn"></i> Ads Management
                     </a>
                     <a href="#analytics" onclick="switchTab('analytics')" id="nav-analytics" class="nav-tab px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition-all flex items-center gap-2">
                         <i class="fa-solid fa-chart-line"></i> Analytics
@@ -104,14 +110,13 @@
                     </div>
                 </div>
 
-                <!-- STATISTICS & REPORTS PERFORMANCE (Dynamic Views galing sa Database) -->
+                <!-- STATISTICS & REPORTS PERFORMANCE -->
                 <div class="bg-white p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
                             <h3 class="font-extrabold text-slate-900 text-sm uppercase tracking-wider">Statistics & Reports Performance</h3>
                             <p class="text-xs text-slate-400 mt-1">Real-time click/view counts ng bawat balita tuwing ito ay binubuksan ng user.</p>
                         </div>
-                        <!-- Filter Buttons -->
                         <div class="flex items-center bg-slate-100 p-1.5 rounded-2xl gap-1 text-xs font-bold">
                             <button onclick="switchPerformance('daily')" id="btn-daily" class="perf-btn px-4 py-2 rounded-xl bg-slate-900 text-white transition-all cursor-pointer">Daily</button>
                             <button onclick="switchPerformance('weekly')" id="btn-weekly" class="perf-btn px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition-all cursor-pointer">Weekly</button>
@@ -120,7 +125,6 @@
                         </div>
                     </div>
 
-                    <!-- BAR GRAPH SECTION -->
                     <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200/60">
                         <div class="flex justify-between items-center mb-4">
                             <span class="text-xs font-bold text-slate-700 uppercase tracking-wide">Performance Overview Graph</span>
@@ -130,222 +134,117 @@
                             <canvas id="performanceChart"></canvas>
                         </div>
                     </div>
-
-                    <!-- DAILY VIEWS LIST -->
-                    <div id="perf-daily" class="perf-content space-y-3">
-                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl inline-block">Ngayong Araw (Daily Click Counts)</span>
-                        <div class="divide-y divide-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden">
-                            @isset($articles)
-                                @forelse($articles->sortByDesc('daily_views')->take(5) as $art)
-                                    <div class="p-4 flex justify-between items-center bg-white hover:bg-slate-50 transition">
-                                        <div class="flex items-center gap-3">
-                                            <span class="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 font-bold flex items-center justify-center text-xs"><i class="fa-solid fa-newspaper"></i></span>
-                                            <span class="font-bold text-slate-800 text-xs line-clamp-1">{{ $art->title }}</span>
-                                        </div>
-                                        <span class="bg-slate-100 text-slate-900 font-black text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                                            <i class="fa-solid fa-eye text-emerald-600"></i> {{ $art->daily_views ?? 0 }} views
-                                        </span>
-                                    </div>
-                                @empty
-                                    <div class="p-4 text-center text-xs text-slate-400">Walang datos.</div>
-                                @endforelse
-                            @endisset
-                        </div>
-                    </div>
-
-                    <!-- WEEKLY VIEWS LIST -->
-                    <div id="perf-weekly" class="perf-content space-y-3 hidden">
-                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl inline-block">Ngayong Linggo (Weekly Click Counts)</span>
-                        <div class="divide-y divide-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden">
-                            @isset($articles)
-                                @forelse($articles->sortByDesc('weekly_views')->take(5) as $art)
-                                    <div class="p-4 flex justify-between items-center bg-white hover:bg-slate-50 transition">
-                                        <div class="flex items-center gap-3">
-                                            <span class="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 font-bold flex items-center justify-center text-xs"><i class="fa-solid fa-newspaper"></i></span>
-                                            <span class="font-bold text-slate-800 text-xs line-clamp-1">{{ $art->title }}</span>
-                                        </div>
-                                        <span class="bg-slate-100 text-slate-900 font-black text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                                            <i class="fa-solid fa-eye text-emerald-600"></i> {{ $art->weekly_views ?? 0 }} views
-                                        </span>
-                                    </div>
-                                @empty
-                                    <div class="p-4 text-center text-xs text-slate-400">Walang datos.</div>
-                                @endforelse
-                            @endisset
-                        </div>
-                    </div>
-
-                    <!-- MONTHLY VIEWS LIST -->
-                    <div id="perf-monthly" class="perf-content space-y-3 hidden">
-                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl inline-block">Ngayong Buwan (Monthly Click Counts)</span>
-                        <div class="divide-y divide-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden">
-                            @isset($articles)
-                                @forelse($articles->sortByDesc('monthly_views')->take(5) as $art)
-                                    <div class="p-4 flex justify-between items-center bg-white hover:bg-slate-50 transition">
-                                        <div class="flex items-center gap-3">
-                                            <span class="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 font-bold flex items-center justify-center text-xs"><i class="fa-solid fa-newspaper"></i></span>
-                                            <span class="font-bold text-slate-800 text-xs line-clamp-1">{{ $art->title }}</span>
-                                        </div>
-                                        <span class="bg-slate-100 text-slate-900 font-black text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                                            <i class="fa-solid fa-eye text-emerald-600"></i> {{ $art->monthly_views ?? 0 }} views
-                                        </span>
-                                    </div>
-                                @empty
-                                    <div class="p-4 text-center text-xs text-slate-400">Walang datos.</div>
-                                @endforelse
-                            @endisset
-                        </div>
-                    </div>
-
-                    <!-- YEARLY VIEWS LIST -->
-                    <div id="perf-yearly" class="perf-content space-y-3 hidden">
-                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl inline-block">Ngayong Taon (Yearly Click Counts)</span>
-                        <div class="divide-y divide-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden">
-                            @isset($articles)
-                                @forelse($articles->sortByDesc('yearly_views')->take(5) as $art)
-                                    <div class="p-4 flex justify-between items-center bg-white hover:bg-slate-50 transition">
-                                        <div class="flex items-center gap-3">
-                                            <span class="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 font-bold flex items-center justify-center text-xs"><i class="fa-solid fa-newspaper"></i></span>
-                                            <span class="font-bold text-slate-800 text-xs line-clamp-1">{{ $art->title }}</span>
-                                        </div>
-                                        <span class="bg-slate-100 text-slate-900 font-black text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                                            <i class="fa-solid fa-eye text-emerald-600"></i> {{ $art->yearly_views ?? 0 }} views
-                                        </span>
-                                    </div>
-                                @empty
-                                    <div class="p-4 text-center text-xs text-slate-400">Walang datos.</div>
-                                @endforelse
-                            @endisset
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Articles Table -->
-                <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
-                    <div class="px-7 py-5 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
-                        <h3 class="font-extrabold text-slate-900 text-xs uppercase tracking-wider">Mga Huling Inilathalang Balita</h3>
-                        <button onclick="switchTab('articles')" class="text-xs font-bold text-emerald-600 hover:underline">Tingnan ang Lahat</button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-slate-50/80 text-slate-400 uppercase text-[11px] tracking-wider border-b border-slate-200">
-                                    <th class="py-3.5 px-6 font-bold">Pamagat / Balita</th>
-                                    <th class="py-3.5 px-6 font-bold">Kategorya</th>
-                                    <th class="py-3.5 px-6 font-bold">Petsa Nailathala</th>
-                                    <th class="py-3.5 px-6 font-bold text-right">Aksyon</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                @isset($articles)
-                                    @forelse($articles->take(5) as $art)
-                                        <tr class="hover:bg-slate-50/60 transition-all text-xs">
-                                            <td class="py-4 px-6 font-bold text-slate-900 flex items-center gap-3.5">
-                                                @if($art->image_url)
-                                                    <img src="{{ $art->image_url }}" class="w-10 h-10 rounded-xl object-cover border border-slate-200 shadow-2xs" alt="">
-                                                @endif
-                                                <span class="line-clamp-1 text-sm">{{ $art->title }}</span>
-                                            </td>
-                                            <td class="py-4 px-6">
-                                                <span class="bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-3 py-1.5 rounded-full font-bold text-xs uppercase">{{ $art->category }}</span>
-                                            </td>
-                                            <td class="py-4 px-6 text-slate-500 font-medium text-xs">{{ $art->created_at?->diffForHumans() }}</td>
-                                            <td class="py-4 px-6 text-right">
-                                                <a href="{{ route('news.show', $art->id) }}" target="_blank" class="text-slate-400 hover:text-emerald-600 font-bold p-2 transition-all"><i class="fa-solid fa-eye text-base"></i></a>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4" class="py-8 text-center text-slate-400 font-medium text-sm">Wala pang naidagdag na artikulo.</td>
-                                        </tr>
-                                    @endforelse
-                                @endisset
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
             </div>
 
             <!-- TAB 2: ARTICLES MANAGEMENT TABLE -->
-            <div id="tab-articles" class="tab-content hidden space-y-6">
-                <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden p-7">
-                    <div class="flex justify-between items-center mb-6">
-                        <div>
-                            <h3 class="font-extrabold text-slate-900 text-sm uppercase tracking-wider">Pamamahala ng mga Artikulo</h3>
-                            <p class="text-xs text-slate-400 mt-1">Listahan ng lahat ng balitang na-publish sa sistema.</p>
-                        </div>
-                        <button onclick="openNewsModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold px-5 py-3 rounded-2xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer flex items-center gap-2">
-                            <i class="fa-solid fa-plus text-sm"></i> Bagong Balita
-                        </button>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-400 uppercase text-[11px] tracking-wider border-b border-slate-200">
-                                    <th class="py-4 px-5 font-bold">ID</th>
-                                    <th class="py-4 px-5 font-bold">Pamagat</th>
-                                    <th class="py-4 px-5 font-bold">Kategorya</th>
-                                    <th class="py-4 px-5 font-bold">Uri</th>
-                                    <th class="py-4 px-5 font-bold text-right">Aksyon</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                @isset($articles)
-                                    @forelse($articles as $art)
-                                        <tr class="hover:bg-slate-50/60 transition-all text-xs">
-                                            <td class="py-4 px-5 font-bold text-slate-400">#{{ $art->id }}</td>
-                                            <td class="py-4 px-5 font-bold text-slate-900 max-w-xs truncate text-sm">{{ $art->title }}</td>
-                                            <td class="py-4 px-5"><span class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-xl font-bold">{{ $art->category }}</span></td>
-                                            <td class="py-4 px-5">
-                                                <div class="flex gap-2">
-                                                    @if($art->is_featured)<span class="bg-emerald-100 text-emerald-800 text-[10px] px-2.5 py-1 rounded-md font-bold">Featured</span>@endif
-                                                    @if($art->is_breaking)<span class="bg-rose-100 text-rose-800 text-[10px] px-2.5 py-1 rounded-md font-bold">Breaking</span>@endif
-                                                </div>
-                                            </td>
-                                            <td class="py-4 px-5 text-right space-x-2">
-                                                <a href="{{ route('news.show', $art->id) }}" target="_blank" class="text-slate-400 hover:text-emerald-600 p-1.5 transition-all text-sm" title="Tingnan"><i class="fa-solid fa-eye"></i></a>
-                                                <button onclick="openEditModal({{ $art->id }})" class="text-emerald-600 hover:text-emerald-700 font-bold p-1.5 transition-all cursor-pointer text-sm" title="I-edit"><i class="fa-solid fa-pen-to-square"></i></button>
-                                                <form action="{{ route('admin.articles.destroy', $art->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Sigurado ka bang gusto mong burahin ang balitang ito?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold p-1.5 transition-all cursor-pointer text-sm" title="Burahin"><i class="fa-solid fa-trash"></i></button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="5" class="py-8 text-center text-slate-400 font-medium text-sm">Walang makitang mga artikulo.</td>
-                                        </tr>
-                                    @endforelse
-                                @endisset
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+<div id="tab-articles" class="tab-content hidden space-y-6">
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden p-7">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="font-extrabold text-slate-900 text-sm uppercase tracking-wider">Pamamahala ng mga Artikulo</h3>
+                <p class="text-xs text-slate-400 mt-1">Listahan ng lahat ng balitang na-publish sa sistema.</p>
             </div>
+            <button onclick="openNewsModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold px-5 py-3 rounded-2xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer flex items-center gap-2">
+                <i class="fa-solid fa-plus text-sm"></i> Bagong Balita
+            </button>
+        </div>
 
-            <!-- TAB 3: CATEGORIES MANAGEMENT -->
-            <div id="tab-categories" class="tab-content hidden space-y-6">
-                <div class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm">
-                    <h3 class="font-extrabold text-slate-900 text-sm uppercase tracking-wider mb-6 text-emerald-700 flex items-center gap-2.5">
-                        <i class="fa-solid fa-folder-plus text-emerald-600 text-base"></i> Pamahalaan ang mga Kategorya
-                    </h3>
-                    <form action="{{ route('admin.categories.store') }}" method="POST" class="flex gap-3.5 mb-6">
-                        @csrf
-                        <input type="text" name="name" placeholder="Pangalan ng Bagong Kategorya (Hal: Isports, Politika)" required class="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all">
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold px-7 py-3.5 rounded-2xl text-xs transition-all shadow-md shadow-emerald-600/20 cursor-pointer">Magdagdag</button>
-                    </form>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        @isset($categories)
-                            @foreach($categories as $cat)
-                                <div class="bg-slate-50/80 border border-slate-200/80 p-4.5 rounded-2xl flex justify-between items-center shadow-2xs">
-                                    <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-tag text-emerald-600 mr-2 text-sm"></i> {{ $cat->name }}</span>
-                                    <form action="{{ route('admin.categories.destroy', $cat->id) }}" method="POST" onsubmit="return confirm('Sigurado ka bang gusto mong burahin ang kategoryang ito?');">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-400 uppercase text-[11px] tracking-wider border-b border-slate-200">
+                        <th class="py-4 px-5 font-bold">ID</th>
+                        <th class="py-4 px-5 font-bold">Pamagat</th>
+                        <th class="py-4 px-5 font-bold">Kategorya</th>
+                        <th class="py-4 px-5 font-bold">Uri</th>
+                        <th class="py-4 px-5 font-bold text-right">Aksyon</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @isset($articles)
+                        @forelse($articles as $art)
+                            <tr class="hover:bg-slate-50/60 transition-all text-xs">
+                                <td class="py-4 px-5 font-bold text-slate-400">#{{ $art->id }}</td>
+                                <td class="py-4 px-5 font-bold text-slate-900 max-w-xs truncate text-sm">{{ $art->title }}</td>
+                                <!-- DITO ANG PAGBABAGO: Ginamit ang categoryRecord->name para mag-update real-time kung binago ni admin -->
+                                <td class="py-4 px-5">
+                                    <span class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-xl font-bold">
+                                        {{ $art->categoryRecord->name ?? $art->category }}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5">
+                                    <div class="flex gap-2">
+                                        @if($art->is_featured)<span class="bg-emerald-100 text-emerald-800 text-[10px] px-2.5 py-1 rounded-md font-bold">Featured</span>@endif
+                                        @if($art->is_breaking)<span class="bg-rose-100 text-rose-800 text-[10px] px-2.5 py-1 rounded-md font-bold">Breaking</span>@endif
+                                    </div>
+                                </td>
+                                <td class="py-4 px-5 text-right space-x-2">
+                                    <a href="{{ route('news.show', $art->id) }}" target="_blank" class="text-slate-400 hover:text-emerald-600 p-1.5 transition-all text-sm" title="Tingnan"><i class="fa-solid fa-eye"></i></a>
+                                    <button onclick="openEditModal({{ $art->id }})" class="text-emerald-600 hover:text-emerald-700 font-bold p-1.5 transition-all cursor-pointer text-sm" title="I-edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                                    <form action="{{ route('admin.articles.destroy', $art->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Sigurado ka bang gusto mong burahin ang balitang ito?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="text-rose-400 hover:text-rose-600 text-xs font-bold cursor-pointer p-2 transition-all"><i class="fa-solid fa-trash text-sm"></i></button>
+                                        <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold p-1.5 transition-all cursor-pointer text-sm" title="Burahin"><i class="fa-solid fa-trash"></i></button>
                                     </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="py-8 text-center text-slate-400 font-medium text-sm">Walang makitang mga artikulo.</td>
+                            </tr>
+                        @endforelse
+                    @endisset
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+            <!-- TAB 3: CATEGORIES MANAGEMENT (DRAG & DROP) -->
+            <div id="tab-categories" class="tab-content hidden space-y-6">
+                <div class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                        <div>
+                            <h3 class="font-extrabold text-slate-900 text-sm uppercase tracking-wider text-emerald-700 flex items-center gap-2.5">
+                                <i class="fa-solid fa-folder-tree text-emerald-600 text-base"></i> Pamahalaan ang mga Kategorya
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-1">I-drag ang mga kahon para baguhin ang pagkakasunod-sunod, pagkatapos ay i-save.</p>
+                        </div>
+                        <button type="button" onclick="saveCategoryOrder()" class="bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold px-5 py-3 rounded-2xl text-xs transition-all shadow-md cursor-pointer flex items-center gap-2">
+                            <i class="fa-solid fa-floppy-disk text-emerald-400"></i> I-save ang Pagkakasunod-sunod
+                        </button>
+                    </div>
+                    
+                    <form action="{{ route('admin.categories.store') }}" method="POST" class="flex flex-col sm:flex-row gap-3.5 mb-8 bg-slate-50 p-4 rounded-2xl border border-slate-200/60">
+                        @csrf
+                        <input type="text" name="name" placeholder="Pangalan ng Bagong Kategorya (Hal: Nation, Isports)" required class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 transition-all">
+                        <input type="hidden" name="sort_order" value="99">
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold px-6 py-3 rounded-xl text-xs transition-all cursor-pointer shadow-xs">Magdagdag</button>
+                    </form>
+
+                    <!-- Draggable Grid Container -->
+                    <div id="sortable-categories" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        @isset($categories)
+                            @foreach($categories->sortBy('sort_order') as $cat)
+                                <div data-id="{{ $cat->id }}" class="category-card bg-slate-50 hover:bg-white border-2 border-dashed border-slate-300 hover:border-emerald-500 p-4 rounded-2xl flex justify-between items-center shadow-2xs cursor-grab active:cursor-grabbing transition-all">
+                                    <div class="flex items-center gap-3">
+                                        <div class="text-slate-400 hover:text-slate-600">
+                                            <i class="fa-solid fa-grip-vertical text-base"></i>
+                                        </div>
+                                        <div>
+                                            <span class="text-xs font-bold text-slate-800 block">{{ $cat->name }}</span>
+                                            <!-- <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold mt-1 inline-block">Order: <span class="order-badge">{{ $cat->sort_order }}</span></span> -->
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <button type="button" onclick="openEditCategoryModal({{ $cat->id }}, '{{ $cat->name }}', {{ $cat->sort_order ?? 0 }})" class="text-emerald-600 hover:text-emerald-700 text-xs font-bold cursor-pointer p-2 transition-all" title="I-edit"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+                                        <form action="{{ route('admin.categories.destroy', $cat->id) }}" method="POST" onsubmit="return confirm('Sigurado ka bang gusto mong burahin ang kategoryang ito?');" class="inline-block">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-rose-400 hover:text-rose-600 text-xs font-bold cursor-pointer p-2 transition-all" title="Burahin"><i class="fa-solid fa-trash text-sm"></i></button>
+                                        </form>
+                                    </div>
                                 </div>
                             @endforeach
                         @endisset
@@ -353,7 +252,96 @@
                 </div>
             </div>
 
-            <!-- TAB 4: SYSTEM ANALYTICS -->
+            <!-- TAB 4: ADS MANAGEMENT -->
+            <div id="tab-ads" class="tab-content hidden space-y-6">
+                <div class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="font-extrabold text-slate-900 text-sm uppercase tracking-wider text-emerald-700 flex items-center gap-2.5">
+                                <i class="fa-solid fa-bullhorn text-emerald-600 text-base"></i> Pamamahala ng mga Ads (Kiwi Partner Promo)
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-1">Magdagdag, mag-edit, at magtakda ng expiration/time remaining para sa mga sponsored ads.</p>
+                        </div>
+                        <button onclick="openAdModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold px-5 py-3 rounded-2xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer flex items-center gap-2">
+                            <i class="fa-solid fa-plus text-sm"></i> Magdagdag ng Ad
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-400 uppercase text-[11px] tracking-wider border-b border-slate-200">
+                                    <th class="py-4 px-5 font-bold">Banner / Title</th>
+                                    <th class="py-4 px-5 font-bold">Badge / Promo</th>
+                                    <th class="py-4 px-5 font-bold">Time Remaining (Expiration)</th>
+                                    <th class="py-4 px-5 font-bold">Status</th>
+                                    <th class="py-4 px-5 font-bold text-right">Aksyon</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @php
+                                    $allAds = \App\Models\Ad::latest()->get();
+                                @endphp
+                                @forelse($allAds as $ad)
+                                    <tr class="hover:bg-slate-50/60 transition-all text-xs">
+                                        <td class="py-4 px-5 font-bold text-slate-900 flex items-center gap-3">
+                                            @if($ad->image_url)
+                                                <img src="{{ $ad->image_url }}" class="w-12 h-10 rounded-lg object-cover border border-slate-200" alt="">
+                                            @endif
+                                            <div>
+                                                <div class="font-bold text-slate-900 line-clamp-1">{{ $ad->title }}</div>
+                                                <a href="{{ $ad->button_link }}" target="_blank" class="text-[10px] text-emerald-600 hover:underline">{{ $ad->button_link }}</a>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-5">
+                                            <span class="bg-amber-100 text-amber-800 text-[10px] px-2.5 py-1 rounded-md font-bold">{{ $ad->badge_text }}</span>
+                                            @if($ad->promo_code)
+                                                <div class="text-[10px] text-slate-500 mt-0.5">Code: <span class="font-bold text-emerald-700">{{ $ad->promo_code }}</span></div>
+                                            @endif
+                                        </td>
+                                        <td class="py-4 px-5 font-medium text-slate-600">
+                                            @if($ad->expires_at)
+                                                @php
+                                                    $expiry = \Carbon\Carbon::parse($ad->expires_at);
+                                                    $isExpired = $expiry->isPast();
+                                                @endphp
+                                                @if($isExpired)
+                                                    <span class="text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded">Expired na</span>
+                                                @else
+                                                    <span class="text-emerald-700 font-bold bg-emerald-50 px-2 py-1 rounded">{{ $expiry->diffForHumans() }}</span>
+                                                @endif
+                                            @else
+                                                <span class="text-slate-400">Walang expiration</span>
+                                            @endif
+                                        </td>
+                                        <td class="py-4 px-5">
+                                            @if($ad->is_active)
+                                                <span class="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-1 rounded font-bold">Active</span>
+                                            @else
+                                                <span class="bg-slate-200 text-slate-600 text-[10px] px-2 py-1 rounded font-bold">Inactive</span>
+                                            @endif
+                                        </td>
+                                        <td class="py-4 px-5 text-right space-x-2">
+                                            <button onclick="openEditAdModal({{ $ad->id }})" class="text-emerald-600 hover:text-emerald-700 font-bold p-1.5 transition-all cursor-pointer text-sm" title="I-edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                                            <form action="{{ route('admin.ads.destroy', $ad->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Sigurado ka bang gusto mong burahin ang ad na ito?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold p-1.5 transition-all cursor-pointer text-sm" title="Burahin"><i class="fa-solid fa-trash"></i></button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="py-8 text-center text-slate-400 font-medium text-sm">Wala pang nakikitang ads.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: SYSTEM ANALYTICS -->
             <div id="tab-analytics" class="tab-content hidden space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
                     <div class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm">
@@ -416,13 +404,11 @@
                 <div class="grid grid-cols-1 gap-4 bg-slate-50/80 p-5 rounded-2xl border border-slate-200/80">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Mag-upload ng Larawan</label>
-                        <input type="file" name="images[]" multiple accept="image/*" required class="w-full bg-white border border-slate-200 rounded-xl p-1 text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700">
-                        <p class="text-[10px] text-slate-500 mt-1">Pumili ng isa o maraming larawan mula sa iyong device.</p>
+                        <input type="file" name="images[]" multiple accept="image/*" class="w-full bg-white border border-slate-200 rounded-xl p-1 text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Mag-upload ng Video (Opsyonal)</label>
                         <input type="file" name="video_file" accept="video/*" class="w-full bg-white border border-slate-200 rounded-xl p-1 text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700">
-                        <p class="text-[10px] text-slate-500 mt-1">Pwedeng mag-upload ng MP4/WebM/MOV/OGG file mula sa iyong device.</p>
                     </div>
                 </div>
 
@@ -449,66 +435,219 @@
         </div>
     </div>
 
-    <!-- EDIT NEWS MODAL -->
-    <div id="editNewsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden overflow-y-auto">
-        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden my-8 border border-slate-100">
+    <!-- EDIT CATEGORY MODAL -->
+    <div id="editCategoryModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
             <div class="bg-emerald-700 text-white px-8 py-5 flex justify-between items-center">
                 <h3 class="font-black text-sm uppercase tracking-wider flex items-center gap-2.5">
-                    <i class="fa-solid fa-pen-to-square text-base"></i> I-edit ang Balita
+                    <i class="fa-solid fa-pen-to-square text-base"></i> I-edit ang Kategorya
                 </h3>
-                <button onclick="closeEditModal()" class="text-white hover:text-emerald-200 font-bold text-2xl cursor-pointer">&times;</button>
+                <button onclick="closeEditCategoryModal()" class="text-white hover:text-emerald-200 font-bold text-2xl cursor-pointer">&times;</button>
             </div>
 
-            <form id="editForm" method="POST" enctype="multipart/form-data" class="p-8 space-y-5 max-h-[75vh] overflow-y-auto">
+            <form id="editCategoryForm" method="POST" class="p-8 space-y-4">
                 @csrf
                 @method('PUT')
-                
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Pamagat (Title)</label>
-                    <input type="text" id="edit_title" name="title" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all">
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Pangalan ng Kategorya</label>
+                    <input type="text" id="edit_cat_name" name="name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Sorting Order (Sequence)</label>
+                    <input type="number" id="edit_cat_sort_order" name="sort_order" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                    <button type="button" onclick="closeEditCategoryModal()" class="bg-slate-100 px-5 py-2.5 rounded-xl font-bold text-xs cursor-pointer">Kanselahin</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold text-xs cursor-pointer">I-save ang Pagbabago</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT ARTICLE MODAL -->
+    <div id="editArticleModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
+            <div class="bg-[#0b6623] text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square"></i> I-EDIT ANG BALITA
+                </h3>
+                <button type="button" onclick="closeEditModal()" class="text-white hover:text-gray-200 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="editArticleForm" method="POST" enctype="multipart/form-data" class="p-6 overflow-y-auto space-y-4 flex-1">
+                @csrf
+                @method('PUT')
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-gray-600 mb-1">Pamagat (Title)</label>
+                    <input type="text" name="title" id="edit_title" required class="w-full bg-white border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#0b6623] focus:outline-none">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Kategorya</label>
-                    <select id="edit_category" name="category" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all">
-                        <option value="">Pumili ng Kategorya</option>
+                    <label class="block text-[11px] font-bold uppercase text-gray-600 mb-1">Kategorya</label>
+                    <select name="category" id="edit_category" required class="w-full bg-white border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#0b6623] focus:outline-none">
                         @foreach(\App\Models\Category::all() as $cat)
                             <option value="{{ $cat->name }}">{{ $cat->name }}</option>
                         @endforeach
                     </select>
                 </div>
 
-                <div class="grid grid-cols-1 gap-4 bg-slate-50/80 p-5 rounded-2xl border border-slate-200/80">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Mag-upload ng Larawan</label>
-                        <input type="file" id="edit_images" name="images[]" multiple accept="image/*" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 transition-all">
-                        <p class="text-[10px] text-slate-500 mt-1">Piliin ang mga bagong larawan mula sa iyong device para idagdag sa artikulo.</p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Mag-upload ng Video (Opsyonal)</label>
-                        <input type="file" id="edit_video_file" name="video_file" accept="video/*" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 transition-all">
-                        <p class="text-[10px] text-slate-500 mt-1">Piliin ang bagong video mula sa iyong device kung kailangan.</p>
-                    </div>
-                </div>
-
-                    <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Maikling Buod (Excerpt)</label>
-                    <textarea id="edit_excerpt" name="excerpt" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-600 transition-all"></textarea>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-gray-600 mb-1">Mag-upload ng Larawan</label>
+                    <input type="file" name="images[]" multiple accept="image/*" class="w-full bg-white border border-gray-300 rounded-lg p-2 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Nilalaman ng Balita (Body)</label>
-                    <textarea id="edit_body" name="body" rows="4" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-600 transition-all"></textarea>
+                    <label class="block text-[11px] font-bold uppercase text-gray-600 mb-1">Mag-upload ng Video (Opsyonal)</label>
+                    <input type="file" name="video_file" accept="video/*" class="w-full bg-white border border-gray-300 rounded-lg p-2 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
                 </div>
 
-                <div class="flex flex-wrap gap-6 text-xs font-semibold pt-1">
-                    <label class="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" id="edit_is_featured" name="is_featured" value="1" class="rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"> Is Featured</label>
-                    <label class="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" id="edit_is_breaking" name="is_breaking" value="1" class="rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"> Breaking News</label>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-gray-600 mb-1">Maikling Buod (Excerpt)</label>
+                    <textarea name="excerpt" id="edit_excerpt" rows="2" class="w-full bg-white border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#0b6623] focus:outline-none"></textarea>
                 </div>
 
-                <div class="flex justify-end gap-3.5 pt-5 border-t border-slate-200">
-                    <button type="button" onclick="closeEditModal()" class="bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold px-6 py-3 rounded-2xl text-xs transition-all cursor-pointer">Kanselahin</button>
-                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold px-7 py-3 rounded-2xl text-xs transition-all cursor-pointer shadow-md shadow-emerald-600/20">I-save ang Pagbabago</button>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-gray-600 mb-1">Nilalaman ng Balita (Body)</label>
+                    <textarea name="body" id="edit_body" rows="5" required class="w-full bg-white border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#0b6623] focus:outline-none"></textarea>
+                </div>
+
+                <div class="flex items-center gap-6 pt-1">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" name="is_featured" id="edit_is_featured" value="1" class="rounded text-[#0b6623] focus:ring-[#0b6623] w-4 h-4">
+                        <span class="text-xs font-medium text-gray-700">Is Featured</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" name="is_breaking" id="edit_is_breaking" value="1" class="rounded text-[#0b6623] focus:ring-[#0b6623] w-4 h-4">
+                        <span class="text-xs font-medium text-gray-700">Breaking News</span>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+                    <button type="button" onclick="closeEditModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2 rounded-lg text-xs font-bold transition">Kanselahin</button>
+                    <button type="submit" class="bg-[#0b6623] hover:bg-emerald-800 text-white px-6 py-2 rounded-lg text-xs font-bold transition shadow-md">I-save ang Pagbabago</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CREATE AD MODAL -->
+    <div id="adModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden overflow-y-auto">
+        <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden my-8 border border-slate-100">
+            <div class="bg-emerald-700 text-white px-8 py-5 flex justify-between items-center">
+                <h3 class="font-black text-sm uppercase tracking-wider flex items-center gap-2.5">
+                    <i class="fa-solid fa-bullhorn text-base"></i> Magdagdag ng Bagong Ad
+                </h3>
+                <button onclick="closeAdModal()" class="text-white hover:text-emerald-200 font-bold text-2xl cursor-pointer">&times;</button>
+            </div>
+
+            <form action="{{ route('admin.ads.store') }}" method="POST" class="p-8 space-y-4 max-h-[75vh] overflow-y-auto">
+                @csrf
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Ad Title</label>
+                    <input type="text" name="title" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Image URL</label>
+                    <input type="url" name="image_url" placeholder="https://example.com/banner.jpg" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Badge Text (Hal: Limited Offer)</label>
+                    <input type="text" name="badge_text" value="Limited Offer" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Description / Promo details</label>
+                    <textarea name="description" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Promo Code</label>
+                        <input type="text" name="promo_code" placeholder="HAL: PARATRICYCLE" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Button Text</label>
+                        <input type="text" name="button_text" value="Alamin Pa" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Button Link (URL)</label>
+                    <input type="url" name="button_link" placeholder="https://paratricycleapp.com" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Expiration Date & Time (Time Remaining)</label>
+                    <input type="datetime-local" name="expires_at" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                </div>
+                <div class="flex items-center gap-2 pt-2">
+                    <input type="checkbox" name="is_active" value="1" checked class="w-4 h-4 text-emerald-600 rounded">
+                    <label class="text-xs font-bold text-slate-700">Active agad sa Sidebar</label>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                    <button type="button" onclick="closeAdModal()" class="bg-slate-100 px-5 py-2.5 rounded-xl font-bold text-xs">Kanselahin</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold text-xs">I-save ang Ad</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT AD MODAL -->
+    <div id="editAdModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden overflow-y-auto">
+        <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden my-8 border border-slate-100">
+            <div class="bg-emerald-700 text-white px-8 py-5 flex justify-between items-center">
+                <h3 class="font-black text-sm uppercase tracking-wider flex items-center gap-2.5">
+                    <i class="fa-solid fa-pen-to-square text-base"></i> I-edit ang Ad
+                </h3>
+                <button onclick="closeEditAdModal()" class="text-white hover:text-emerald-200 font-bold text-2xl cursor-pointer">&times;</button>
+            </div>
+
+            <form id="editAdForm" method="POST" class="p-8 space-y-4 max-h-[75vh] overflow-y-auto">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Ad Title</label>
+                    <input type="text" id="edit_ad_title" name="title" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Image URL</label>
+                    <input type="url" id="edit_ad_image_url" name="image_url" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Badge Text</label>
+                    <input type="text" id="edit_ad_badge_text" name="badge_text" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Description</label>
+                    <textarea id="edit_ad_description" name="description" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Promo Code</label>
+                        <input type="text" id="edit_ad_promo_code" name="promo_code" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Button Text</label>
+                        <input type="text" id="edit_ad_button_text" name="button_text" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Button Link (URL)</label>
+                    <input type="url" id="edit_ad_button_link" name="button_link" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Expiration Date & Time</label>
+                    <input type="datetime-local" id="edit_ad_expires_at" name="expires_at" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                </div>
+                <div class="flex items-center gap-2 pt-2">
+                    <input type="checkbox" id="edit_ad_is_active" name="is_active" value="1" class="w-4 h-4 text-emerald-600 rounded">
+                    <label class="text-xs font-bold text-slate-700">Active</label>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                    <button type="button" onclick="closeEditAdModal()" class="bg-slate-100 px-5 py-2.5 rounded-xl font-bold text-xs">Kanselahin</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold text-xs">I-save ang Pagbabago</button>
                 </div>
             </form>
         </div>
@@ -533,28 +672,118 @@
             }
         }
 
-        // Chart.js Configuration
+        // Initialize SortableJS for Category Drag & Drop
+        document.addEventListener("DOMContentLoaded", function () {
+            const el = document.getElementById('sortable-categories');
+            if (el) {
+                Sortable.create(el, {
+                    animation: 150,
+                    ghostClass: 'bg-emerald-100',
+                    onEnd: function () {
+                        // Automatically update visual order number badges in real-time
+                        document.querySelectorAll('#sortable-categories .category-card').forEach((card, index) => {
+                            const badge = card.querySelector('.order-badge');
+                            if (badge) badge.innerText = index + 1;
+                        });
+                    }
+                });
+            }
+        });
+
+        // Function para i-save ang pagkakasunod-sunod na may Confirmation Modal at Tamang Tab retention
+function saveCategoryOrder() {
+    // Buksan muna ang ating custom confirmation modal (o maaari ring gamitin ang Tailwind modal)
+    let orderData = [];
+    document.querySelectorAll('#sortable-categories .category-card').forEach((card, index) => {
+        orderData.push({
+            id: card.getAttribute('data-id'),
+            sort_order: index + 1
+        });
+    });
+
+    fetch("{{ route('admin.categories.reorder') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ order: orderData })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            // Gumawa ng magandang Confirmation Modal sa screen
+            showConfirmationModal("Matagumpay na na-save ang pagkakasunod-sunod ng kategorya!");
+        } else {
+            showConfirmationModal("May naganap na error. Subukang muli.", true);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showConfirmationModal("May naganap na error sa koneksyon.", true);
+    });
+}
+
+// Custom Modal Confirmation Popup (Pamalit sa alert at toast)
+function showConfirmationModal(message, isError = false) {
+    // Alisin muna kung may umiiral na modal para hindi magpatong-patong
+    let existing = document.getElementById('custom-alert-modal');
+    if (existing) existing.remove();
+
+    let modalHTML = `
+        <div id="custom-alert-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all">
+            <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border border-slate-100 p-6 text-center space-y-4">
+                <div class="w-12 h-12 mx-auto rounded-full flex items-center justify-center ${isError ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'}">
+                    <i class="fa-solid ${isError ? 'fa-triangle-exclamation' : 'fa-check'} text-lg"></i>
+                </div>
+                <div>
+                    <h4 class="font-black text-slate-900 text-base">Paalala</h4>
+                    <p class="text-xs text-slate-500 mt-1">${message}</p>
+                </div>
+                <button type="button" onclick="reloadToCategoriesTab()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-2xl text-xs transition-all cursor-pointer shadow-md">
+                    OK
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// Function para mag-reload habang nananatili sa #categories tab
+function reloadToCategoriesTab() {
+    window.location.href = "{{ route('admin.dashboard') }}#categories";
+    location.reload();
+}
+
+// Auto-switch tab kapag may kasamang hash sa URL (Hal: /admin/dashboard#categories)
+document.addEventListener("DOMContentLoaded", function () {
+    let hash = window.location.hash;
+    if (hash) {
+        let tabName = hash.replace('#', '');
+        switchTab(tabName);
+    }
+});
+
         const ctx = document.getElementById('performanceChart').getContext('2d');
-        
         const chartData = {
             daily: {
                 labels: {!! $dailyLabels ?? "['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']" !!},
                 data: [{{ $dailyValues ?? '0,0,0,0,0,0,0' }}],
-                label: 'Daily Views (Ayon sa Araw)'
+                label: 'Daily Views'
             },
             weekly: {
                 labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-                data: [{{ $topWeekly }}],
+                data: [{{ $topWeekly ?? '0,0,0,0' }}],
                 label: 'Weekly Views'
             },
             monthly: {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                data: [{{ $topMonthly }}],
+                data: [{{ $topMonthly ?? '0,0,0,0,0,0,0,0,0,0,0,0' }}],
                 label: 'Monthly Views'
             },
             yearly: {
                 labels: ['2023', '2024', '2025', '2026'],
-                data: [{{ $topYearly }}],
+                data: [{{ $topYearly ?? '0,0,0,0' }}],
                 label: 'Yearly Views'
             }
         };
@@ -573,9 +802,7 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
+                plugins: { legend: { display: false } },
                 scales: {
                     y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
                     x: { grid: { display: false } }
@@ -584,63 +811,71 @@
         });
 
         function switchPerformance(perfType) {
-            document.querySelectorAll('.perf-content').forEach(el => {
-                el.classList.add('hidden');
-            });
-            document.querySelectorAll('.perf-btn').forEach(el => {
-                el.classList.remove('bg-slate-900', 'text-white');
-                el.classList.add('text-slate-600', 'hover:text-slate-900');
-            });
-            
-            document.getElementById('perf-' + perfType).classList.remove('hidden');
-            
-            let activeBtn = document.getElementById('btn-' + perfType);
-            if(activeBtn) {
-                activeBtn.classList.remove('text-slate-600', 'hover:text-slate-900');
-                activeBtn.classList.add('bg-slate-900', 'text-white');
-            }
-
             performanceChart.data.labels = chartData[perfType].labels;
             performanceChart.data.datasets[0].data = chartData[perfType].data;
             performanceChart.update();
-
             document.getElementById('graph-label-badge').innerText = chartData[perfType].label;
         }
 
-        function openNewsModal() {
-            document.getElementById('newsModal').classList.remove('hidden');
+        function openNewsModal() { document.getElementById('newsModal').classList.remove('hidden'); }
+        function closeNewsModal() { document.getElementById('newsModal').classList.add('hidden'); }
+
+        // Category Edit Handlers
+        function openEditCategoryModal(id, name, sortOrder) {
+            document.getElementById('editCategoryForm').action = `/admin/categories/${id}`;
+            document.getElementById('edit_cat_name').value = name;
+            document.getElementById('edit_cat_sort_order').value = sortOrder;
+            document.getElementById('editCategoryModal').classList.remove('hidden');
         }
-        function closeNewsModal() {
-            document.getElementById('newsModal').classList.add('hidden');
+
+        function closeEditCategoryModal() {
+            document.getElementById('editCategoryModal').classList.add('hidden');
         }
 
         function openEditModal(id) {
             fetch(`/admin/articles/${id}/edit`)
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('editForm').action = `/admin/articles/${id}`;
+                    document.getElementById('editArticleForm').action = `/admin/articles/${id}`;
                     document.getElementById('edit_title').value = data.title;
                     document.getElementById('edit_category').value = data.category;
                     document.getElementById('edit_excerpt').value = data.excerpt || '';
                     document.getElementById('edit_body').value = data.body;
-                    
                     document.getElementById('edit_is_featured').checked = data.is_featured == 1;
                     document.getElementById('edit_is_breaking').checked = data.is_breaking == 1;
-
-                    document.getElementById('editNewsModal').classList.remove('hidden');
+                    
+                    document.getElementById('editArticleModal').classList.remove('hidden');
                 });
         }
 
         function closeEditModal() {
-            document.getElementById('editNewsModal').classList.add('hidden');
+            document.getElementById('editArticleModal').classList.add('hidden');
         }
 
-        window.onclick = function(event) {
-            let newsModal = document.getElementById('newsModal');
-            let editNewsModal = document.getElementById('editNewsModal');
-            if (event.target == newsModal) closeNewsModal();
-            if (event.target == editNewsModal) closeEditModal();
+        // Ad Modals Handlers
+        function openAdModal() { document.getElementById('adModal').classList.remove('hidden'); }
+        function closeAdModal() { document.getElementById('adModal').classList.add('hidden'); }
+
+        function openEditAdModal(id) {
+            fetch(`/admin/ads/${id}/edit`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('editAdForm').action = `/admin/ads/${id}`;
+                    document.getElementById('edit_ad_title').value = data.title;
+                    document.getElementById('edit_ad_image_url').value = data.image_url;
+                    document.getElementById('edit_ad_badge_text').value = data.badge_text || '';
+                    document.getElementById('edit_ad_description').value = data.description || '';
+                    document.getElementById('edit_ad_promo_code').value = data.promo_code || '';
+                    document.getElementById('edit_ad_button_text').value = data.button_text || '';
+                    document.getElementById('edit_ad_button_link').value = data.button_link;
+                    if(data.expires_at) {
+                        document.getElementById('edit_ad_expires_at').value = data.expires_at.replace(' ', 'T').slice(0, 16);
+                    }
+                    document.getElementById('edit_ad_is_active').checked = data.is_active == 1;
+                    document.getElementById('editAdModal').classList.remove('hidden');
+                });
         }
+        function closeEditAdModal() { document.getElementById('editAdModal').classList.add('hidden'); }
     </script>
 </body>
 </html>

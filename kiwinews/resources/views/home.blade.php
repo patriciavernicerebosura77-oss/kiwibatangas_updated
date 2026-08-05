@@ -28,32 +28,7 @@
 </head>
 <body class="bg-white text-gray-900 font-sans">
 
-    <!-- TOP INFO BAR -->
-<div class="bg-gray-100 text-gray-700 text-xs py-1.5 px-3 border-b border-gray-200">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
-        <div class="flex items-center space-x-4">
-            <span><i class="fa-regular fa-calendar mr-1"></i> {{ \Carbon\Carbon::now('Asia/Manila')->format('l, F j, Y') }}</span>
-            
-            <a id="weather-link" href="https://www.google.com/search?q=weather" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-1.5 bg-white px-2.5 py-0.5 rounded border border-gray-300 shadow-2xs hover:border-emerald-600 transition group">
-                <i id="weather-icon" class="fa-solid fa-cloud-sun text-amber-500 text-sm"></i>
-                <div class="flex items-center space-x-1 font-medium text-gray-800">
-                    <span id="weather-location" class="font-bold text-gray-900 group-hover:text-emerald-700 transition">Hinahanap ang lokasyon...</span>
-                    <span id="weather-temp" class="text-emerald-700 font-black">--°C</span>
-                    <span class="text-gray-400 font-normal text-[10px]">| Weather</span>
-                </div>
-                <i class="fa-solid fa-external-link-alt text-[8px] text-gray-400 group-hover:text-emerald-700 ml-0.5"></i>
-            </a>
-        </div>
 
-        <a href="https://www.bsp.gov.ph/SitePages/Statistics/ExchangeRate.aspx" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2 bg-white px-2.5 py-0.5 rounded border border-gray-300 shadow-2xs hover:border-emerald-600 transition group">
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-emerald-700">FX Rates:</span>
-            <div id="fx-rotator" class="font-medium text-xs text-emerald-800 transition-opacity duration-500">
-                <span class="text-gray-400 italic">Kumukuha ng live rates...</span>
-            </div>
-            <i class="fa-solid fa-external-link-alt text-[8px] text-gray-400 group-hover:text-emerald-700 ml-0.5"></i>
-        </a>
-    </div>
-</div>
 
     <!-- MAIN HEADER -->
     <header class="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
@@ -65,6 +40,33 @@
                     <span class="text-[10px] font-bold text-emerald-700 tracking-widest uppercase">Digital News Portal</span>
                 </div>
             </a>
+
+            <div class="bg-white-100 text-gray-700 text-xs py-1.5 px-3 border-b border-white-200">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
+        <div class="flex items-center space-x-4">
+            <span><i class="fa-regular fa-calendar mr-1"></i> {{ \Carbon\Carbon::now('Asia/Manila')->format('l, F j, Y') }}</span>
+            
+            <!-- WEATHER SECTION (Non-redirecting, accurate live forecast) -->
+            <div class="flex items-center space-x-1.5 bg-white px-2.5 py-0.5 rounded border border-gray-300 shadow-2xs">
+                <i id="weather-icon" class="fa-solid fa-cloud-sun text-amber-500 text-sm"></i>
+                <div class="flex items-center space-x-1 font-medium text-gray-800">
+                    <span id="weather-location" class="font-bold text-gray-900">loading...</span>
+                    <span id="weather-temp" class="text-emerald-700 font-black">--°C</span>
+                    <span class="text-gray-400 font-normal text-[10px]">| Weather</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- BSP FX RATES SECTION (Auto-updating live rates with direct official BSP link) -->
+        <a href="https://www.bsp.gov.ph/SitePages/Statistics/ExchangeRate.aspx" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2 bg-white px-2.5 py-0.5 rounded border border-gray-300 shadow-2xs hover:border-emerald-600 transition group">
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-emerald-700">BSP FX Rates:</span>
+            <div id="fx-rotator" class="font-medium text-xs text-emerald-800 transition-opacity duration-500">
+                <span class="text-gray-400 italic">loading...</span>
+            </div>
+            <i class="fa-solid fa-external-link-alt text-[8px] text-gray-400 group-hover:text-emerald-700 ml-0.5"></i>
+        </a>
+    </div>
+</div>
 
             <div class="flex items-center gap-2.5 w-full md:w-auto">
                 <form action="/" method="GET" class="flex items-center w-full md:w-80">
@@ -86,7 +88,7 @@
             <a href="{{ route('home', array_filter(['search' => request('search')])) }}" class="px-3.5 py-1.5 rounded-full {{ (!request('category') || request('category') == '') ? 'bg-emerald-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-emerald-100 hover:text-emerald-800' }} transition">Mga Balita</a>
             
             @php
-                $navCategories = \App\Models\Category::all();
+                $navCategories = \App\Models\Category::orderBy('sort_order', 'asc')->get();
             @endphp
 
             @foreach($navCategories as $cat)
@@ -166,20 +168,20 @@ document.addEventListener("DOMContentLoaded", function () {
                                @endif
                            </h2>
                        </div>
-                       <a href="/" class="text-xs font-bold bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition">I-reset ang Salain</a>
+                       <!-- <a href="/" class="text-xs font-bold bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition">I-reset ang Salain</a> -->
                    </div>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
                            @forelse($articles as $article)
                            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col shadow-sm news-card">
                                @if($article->image_url)
-                                   <div class="w-full h-48 relative overflow-hidden">
-                                       <a href="{{ route('news.show', $article->id) }}" class="block w-full h-full">
-                                           <img src="{{ $article->image_url }}" alt="Thumbnail" class="w-full h-full object-cover">
-                                       </a>
-                                       <span class="absolute top-3 left-3 bg-emerald-700 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow z-10">{{ $article->category }}</span>
-                                   </div>
-                               @endif
+    <div class="w-full h-48 relative overflow-hidden">
+        <a href="{{ route('news.show', $article->id) }}" class="block w-full h-full">
+            <img src="{{ $article->image_url }}" alt="Thumbnail" class="w-full h-full object-cover">
+        </a>
+        <span class="absolute top-3 left-3 bg-emerald-700 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow z-10">{{ $article->category }}</span>
+    </div>
+@endif
                                <div class="p-4 flex-1 flex flex-col justify-between">
                                    <div>
                                        <div class="flex items-center gap-2 mb-1">
@@ -226,32 +228,47 @@ document.addEventListener("DOMContentLoaded", function () {
            <!-- Sidebar para sa Specific Category o Search results -->
            @if((request('category') && request('category') != 'All') || request('search'))
            <div class="w-full lg:w-1/3 flex flex-col gap-6">
-               <div class="bg-white border border-amber-200 rounded-xl shadow-xs overflow-hidden news-card">
-                   <div class="bg-amber-50 px-4 py-2 border-b border-amber-100 flex justify-between items-center">
-                       <span class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-                           <i class="fa-solid fa-bullhorn text-amber-600"></i> Kiwi Partner Promo
-                       </span>
-                       <span class="text-[10px] bg-amber-200 text-amber-900 font-semibold px-2 py-0.5 rounded-full uppercase">Sponsored / Ad</span>
-                   </div>
-                   <div class="p-4">
-                       <div class="relative group overflow-hidden rounded-lg mb-3 bg-gray-100 aspect-video flex items-center justify-center">
-                           <img src="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=600&q=80" alt="Burger Promo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                           <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded">Limited Offer</span>
-                       </div>
-                       <h4 class="font-bold text-gray-900 text-sm mb-1 line-clamp-1 hover:text-emerald-700 transition-colors">Burger Bundle Special Deal!</h4>
-                       <p class="text-xs text-gray-700 mb-3 leading-relaxed">
-                           Gamitin ang promo code na <strong class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">KIWIBATANGAS</strong> para sa libreng delivery.
-                       </p>
-                       <a href="#" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg shadow-xs transition-all duration-200 flex items-center justify-center gap-2 group">
-                           <span>Alamin Pa</span>
-                           <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
-                       </a>
-                   </div>
-               </div>
+               @php
+    $activeAd = \App\Models\Ad::where('is_active', true)->latest()->first();
+@endphp
+
+@if($activeAd)
+<div class="bg-white border border-amber-200 rounded-xl shadow-xs overflow-hidden news-card">
+    <div class="bg-amber-50 px-4 py-2 border-b border-amber-100 flex justify-between items-center">
+        <span class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-bullhorn text-amber-600"></i> Kiwi Partner Promo
+        </span>
+        <span class="text-[10px] bg-amber-200 text-amber-900 font-semibold px-2 py-0.5 rounded-full uppercase">Sponsored / Ad</span>
+    </div>
+    <div class="p-4">
+        <div class="relative group overflow-hidden rounded-lg mb-3 bg-gray-100 aspect-video flex items-center justify-center">
+            <img src="{{ $activeAd->image_url }}" alt="{{ $activeAd->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+            @if($activeAd->badge_text)
+                <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded">{{ $activeAd->badge_text }}</span>
+            @endif
+        </div>
+        <h4 class="font-bold text-gray-900 text-sm mb-1 line-clamp-1 hover:text-emerald-700 transition-colors">{{ $activeAd->title }}</h4>
+        
+        @if($activeAd->description)
+            <p class="text-xs text-gray-700 mb-3 leading-relaxed">
+                {!! $activeAd->description !!}
+                @if($activeAd->promo_code)
+                    <strong class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{{ $activeAd->promo_code }}</strong>
+                @endif
+            </p>
+        @endif
+
+        <a href="{{ $activeAd->button_link }}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg shadow-xs transition-all duration-200 flex items-center justify-center gap-2 group">
+            <span>{{ $activeAd->button_text ?? 'Alamin Pa' }}</span>
+            <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+        </a>
+    </div>
+</div>
+@endif
 
                <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm news-card">
                    <h2 class="text-sm font-black border-b-2 border-emerald-700 pb-2 mb-3 uppercase tracking-wider text-gray-900 flex justify-between items-center">
-                       <span>Top Stories (Most Viewed)</span>
+                       <span>Top Stories (Hot Search)</span>
                        <i class="fa-solid fa-bolt text-emerald-700"></i>
                    </h2>
                    <div class="divide-y divide-gray-100">
@@ -269,9 +286,9 @@ document.addEventListener("DOMContentLoaded", function () {
                                    <div class="min-w-0 flex-1">
                                        <div class="flex items-center gap-1.5">
                                            <span class="text-[10px] font-bold text-emerald-700 uppercase">{{ $story->category }}</span>
-                                           @if(isset($story->views))
+                                           <!-- @if(isset($story->views))
                                                <span class="text-[9px] text-gray-400 font-semibold"><i class="fa-solid fa-eye mr-0.5"></i> {{ number_format($story->views) }}</span>
-                                           @endif
+                                           @endif -->
                                        </div>
                                        <h3 class="font-bold text-xs text-gray-900 hover:text-emerald-700 transition line-clamp-2 leading-snug">
                                            <a href="{{ route('news.show', $story->id) }}">{{ $story->title }}</a>
@@ -417,7 +434,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm news-card">
                    <h2 class="text-sm font-black border-b-2 border-emerald-700 pb-2 mb-3 uppercase tracking-wider text-gray-900 flex justify-between items-center">
-                       <span>Top Stories (Most Viewed)</span>
+                       <span>Top Stories (Hot Search)</span>
                        <i class="fa-solid fa-bolt text-emerald-700"></i>
                    </h2>
                    <div class="divide-y divide-gray-100">
@@ -436,9 +453,9 @@ document.addEventListener("DOMContentLoaded", function () {
                                    <div class="min-w-0 flex-1">
                                        <div class="flex items-center gap-1.5">
                                            <span class="text-[10px] font-bold text-emerald-700 uppercase">{{ $story->category }}</span>
-                                           @if(isset($story->views))
+                                           <!-- @if(isset($story->views))
                                                <span class="text-[9px] text-gray-400 font-semibold"><i class="fa-solid fa-eye mr-0.5"></i> {{ number_format($story->views) }}</span>
-                                           @endif
+                                           @endif -->
                                        </div>
                                        <h3 class="font-bold text-xs text-gray-900 hover:text-emerald-700 transition line-clamp-2 leading-snug">
                                            <a href="{{ route('news.show', $story->id) }}">{{ $story->title }}</a>
@@ -553,7 +570,7 @@ document.addEventListener("DOMContentLoaded", function () {
             <div>
                 <p class="font-bold text-gray-900 text-xs uppercase tracking-wider mb-3 border-b border-gray-300 pb-1">Mga Kategorya</p>
                 <ul class="text-xs space-y-2">
-                    @foreach(\App\Models\Category::all() as $cat)
+                    @foreach(\App\Models\Category::orderBy('sort_order', 'asc')->get() as $cat)
                         <li><a href="{{ route('home', ['category' => $cat->name]) }}" class="hover:text-emerald-700 transition">{{ $cat->name }}</a></li>
                     @endforeach
                 </ul>
@@ -639,45 +656,91 @@ document.addEventListener("DOMContentLoaded", function () {
     fetchLiveExchangeRates();
 });
 
+    // FULLY DYNAMIC REAL-TIME WEATHER SCRIPT (No static hardcoded fallbacks)
     document.addEventListener("DOMContentLoaded", function () {
-        const weatherLinkEl = document.getElementById('weather-link');
         const locationEl = document.getElementById('weather-location');
         const tempEl = document.getElementById('weather-temp');
+        const weatherIconEl = document.getElementById('weather-icon');
 
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(async function (position) {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                try {
-                    const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m`);
-                    const data = await response.json();
-                    const geoResponse = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-                    const geoData = await geoResponse.json();
-                    let placeName = "Kasalukuyang Lokasyon";
-                    if (geoData && geoData.address) {
-                        placeName = geoData.address.city || geoData.address.municipality || geoData.address.town || geoData.address.village || geoData.address.county || "Kasalukuyang Lokasyon";
-                    }
+        function fetchWeatherByCoords(lat, lon) {
+            // Fetch live weather via Open-Meteo using real-time coordinates
+            fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&temperature_unit=celsius`)
+                .then(response => response.json())
+                .then(data => {
                     if (data && data.current) {
                         const temp = Math.round(data.current.temperature_2m);
-                        locationEl.textContent = placeName;
                         tempEl.textContent = `${temp}°C`;
-                        weatherLinkEl.href = `https://www.google.com/search?q=${encodeURIComponent(placeName + ' weather')}`;
-                    } else {
-                        locationEl.textContent = placeName;
-                        tempEl.textContent = "--°C";
+
+                        const wCode = data.current.weather_code;
+                        if (wCode === 0) {
+                            weatherIconEl.className = "fa-solid fa-sun text-amber-500 text-sm";
+                        } else if (wCode >= 1 && wCode <= 3) {
+                            weatherIconEl.className = "fa-solid fa-cloud-sun text-amber-500 text-sm";
+                        } else if (wCode >= 51 && wCode <= 67) {
+                            weatherIconEl.className = "fa-solid fa-cloud-rain text-blue-500 text-sm";
+                        } else if (wCode >= 95) {
+                            weatherIconEl.className = "fa-solid fa-cloud-bolt text-purple-500 text-sm";
+                        }
                     }
-                } catch (error) {
-                    locationEl.textContent = "Hindi makuha ang panahon";
-                    tempEl.textContent = "--°C";
-                }
-            }, function (error) {
-                locationEl.textContent = "Naka-off ang GPS / Location";
-                tempEl.textContent = "--°C";
-            }, { timeout: 10000 });
-        } else {
-            locationEl.textContent = "Hindi suportado ang Geolocation";
-            tempEl.textContent = "--°C";
+                })
+                .catch(err => console.error("Weather fetch error:", err));
+
+            // Fetch live reverse geocoding to dynamically resolve exact location name on the fly
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16&addressdetails=1`)
+                .then(response => response.json())
+                .then(geoData => {
+                    if (geoData && geoData.address) {
+                        let suburb = geoData.address.suburb || geoData.address.neighbourhood || geoData.address.village || '';
+                        let town = geoData.address.city || geoData.address.municipality || geoData.address.town || '';
+                        
+                        let dynamicName = town;
+                        if (suburb && town && suburb !== town) {
+                            dynamicName = `${suburb}, ${town}`;
+                        } else {
+                            dynamicName = suburb || town || geoData.display_name.split(',')[0];
+                        }
+                        locationEl.textContent = dynamicName;
+                    }
+                })
+                .catch(err => console.error("Geocoding error:", err));
         }
+
+        function initLiveWeatherTracker() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    function (position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        fetchWeatherByCoords(lat, lon);
+                    }, 
+                    function (error) {
+                        // If user blocks location or GPS fails, dynamically detect location via IP-API live network lookup instead of hardcoding text
+                        fetch('https://ipapi.co/json/')
+                            .then(res => res.json())
+                            .then(ipData => {
+                                if (ipData && ipData.latitude && ipData.longitude) {
+                                    locationEl.textContent = ipData.city || ipData.region;
+                                    fetchWeatherByCoords(ipData.latitude, ipData.longitude);
+                                } else {
+                                    locationEl.textContent = "IP Location Unavailable";
+                                }
+                            })
+                            .catch(() => {
+                                locationEl.textContent = "Live Location Required";
+                            });
+                    }, 
+                    { timeout: 12000, enableHighAccuracy: true, maximumAge: 0 }
+                );
+            } else {
+                locationEl.textContent = "Geolocation Not Supported";
+            }
+        }
+
+        // Run immediately on load
+        initLiveWeatherTracker();
+
+        // Automatically re-fetch and update live weather every 5 minutes dynamically
+        setInterval(initLiveWeatherTracker, 300000);
     });
 </script>
 </body>
