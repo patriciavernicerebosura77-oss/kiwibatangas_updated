@@ -247,10 +247,10 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
     <div class="p-4">
         @if($ad->image_url)
-        <div class="relative group overflow-hidden rounded-lg mb-3 bg-gray-100 aspect-video flex items-center justify-center">
-            <img src="{{ $ad->image_url }}" alt="{{ $ad->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-            <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded">Limited Offer</span>
-        </div>
+        <div class="relative group overflow-hidden rounded-lg mb-3 bg-gray-900 flex items-center justify-center">
+    <img src="{{ $ad->image_url }}" alt="{{ $ad->title }}" class="w-full h-auto object-contain max-h-64 transition-transform duration-500">
+    <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded z-10">Limited Offer</span>
+</div>
         @endif
         <h4 class="font-bold text-gray-900 text-sm mb-1 line-clamp-1 hover:text-emerald-700 transition-colors">{{ $ad->title }}</h4>
         
@@ -434,10 +434,10 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
     <div class="p-4">
         @if($ad->image_url)
-        <div class="relative group overflow-hidden rounded-lg mb-3 bg-gray-100 aspect-video flex items-center justify-center">
-            <img src="{{ $ad->image_url }}" alt="{{ $ad->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-            <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded">Limited Offer</span>
-        </div>
+        <div class="relative group overflow-hidden rounded-lg mb-3 bg-gray-900 flex items-center justify-center">
+    <img src="{{ $ad->image_url }}" alt="{{ $ad->title }}" class="w-full h-auto object-contain max-h-64 transition-transform duration-500">
+    <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded z-10">Limited Offer</span>
+</div>
         @endif
         <h4 class="font-bold text-gray-900 text-sm mb-1 line-clamp-1 hover:text-emerald-700 transition-colors">{{ $ad->title }}</h4>
         

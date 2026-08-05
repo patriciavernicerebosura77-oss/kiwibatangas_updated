@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
-            $table->string('image_url');
+            $table->text('image_url');
             $table->string('promo_code')->nullable();
             $table->string('badge_text')->default('Limited Offer');
             $table->string('button_text')->default('Alamin Pa');
