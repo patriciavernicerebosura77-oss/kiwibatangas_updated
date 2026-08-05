@@ -35,9 +35,9 @@ class Article extends Model
      * I-link ang Article sa Category model gamit ang category name o string.
      * Pinapayagan nito ang dynamic fetching ng updated na pangalan mula sa Category table.
      */
-    public function categoryRecord()
-    {
-        // Kung ang 'category' column sa articles ay naglalaman ng pangalan ng kategorya
-        return $this->belongsTo(Category::class, 'category', 'name');
-    }
+public function categoryRecord()
+{
+    // Hahanapin nito sa Category table kung saan ang 'name' ay kapareho ng $this->category
+    return $this->belongsTo(Category::class, 'category', 'name');
+}
 }

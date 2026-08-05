@@ -232,39 +232,49 @@ document.addEventListener("DOMContentLoaded", function () {
     $activeAd = \App\Models\Ad::where('is_active', true)->latest()->first();
 @endphp
 
-@if($activeAd)
-<div class="bg-white border border-amber-200 rounded-xl shadow-xs overflow-hidden news-card">
+@php
+    // Kunin ang mga active ads mula sa database
+    $dynamicAds = \App\Models\Ad::latest()->get();
+@endphp
+
+@forelse($dynamicAds as $ad)
+<div class="bg-white border border-amber-200 rounded-xl shadow-xs overflow-hidden news-card mb-4">
     <div class="bg-amber-50 px-4 py-2 border-b border-amber-100 flex justify-between items-center">
         <span class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-            <i class="fa-solid fa-bullhorn text-amber-600"></i> Kiwi Partner Promo
+            <i class="fa-solid fa-bullhorn text-amber-600"></i> {{ $ad->badge_text ?? 'Kiwi Partner Promo' }}
         </span>
         <span class="text-[10px] bg-amber-200 text-amber-900 font-semibold px-2 py-0.5 rounded-full uppercase">Sponsored / Ad</span>
     </div>
     <div class="p-4">
+        @if($ad->image_url)
         <div class="relative group overflow-hidden rounded-lg mb-3 bg-gray-100 aspect-video flex items-center justify-center">
-            <img src="{{ $activeAd->image_url }}" alt="{{ $activeAd->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-            @if($activeAd->badge_text)
-                <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded">{{ $activeAd->badge_text }}</span>
-            @endif
+            <img src="{{ $ad->image_url }}" alt="{{ $ad->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+            <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded">Limited Offer</span>
         </div>
-        <h4 class="font-bold text-gray-900 text-sm mb-1 line-clamp-1 hover:text-emerald-700 transition-colors">{{ $activeAd->title }}</h4>
+        @endif
+        <h4 class="font-bold text-gray-900 text-sm mb-1 line-clamp-1 hover:text-emerald-700 transition-colors">{{ $ad->title }}</h4>
         
-        @if($activeAd->description)
-            <p class="text-xs text-gray-700 mb-3 leading-relaxed">
-                {!! $activeAd->description !!}
-                @if($activeAd->promo_code)
-                    <strong class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{{ $activeAd->promo_code }}</strong>
-                @endif
-            </p>
+        @if($ad->description)
+        <p class="text-xs text-gray-700 mb-2 leading-relaxed">
+            {{ $ad->description }}
+        </p>
         @endif
 
-        <a href="{{ $activeAd->button_link }}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg shadow-xs transition-all duration-200 flex items-center justify-center gap-2 group">
-            <span>{{ $activeAd->button_text ?? 'Alamin Pa' }}</span>
+        @if($ad->promo_code)
+        <p class="text-xs text-gray-700 mb-3 leading-relaxed">
+            Gamitin ang promo code na <strong class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{{ $ad->promo_code }}</strong>.
+        </p>
+        @endif
+
+        <a href="{{ $ad->button_link ?? '#' }}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg shadow-xs transition-all duration-200 flex items-center justify-center gap-2 group">
+            <span>{{ $ad->button_text ?? 'Alamin Pa' }}</span>
             <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
         </a>
     </div>
 </div>
-@endif
+@empty
+<!-- Kung walang ads, hindi na magpapakita ng lumang hardcode kundi malinis na mawawala -->
+@endforelse
 
                <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm news-card">
                    <h2 class="text-sm font-black border-b-2 border-emerald-700 pb-2 mb-3 uppercase tracking-wider text-gray-900 flex justify-between items-center">
@@ -409,28 +419,49 @@ document.addEventListener("DOMContentLoaded", function () {
 
            <!-- Sidebar Homepage -->
            <div class="w-full lg:w-1/3 flex flex-col gap-6">
-               <div class="bg-white border border-amber-200 rounded-xl shadow-xs overflow-hidden news-card">
-                   <div class="bg-amber-50 px-4 py-2 border-b border-amber-100 flex justify-between items-center">
-                       <span class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-                           <i class="fa-solid fa-bullhorn text-amber-600"></i> Kiwi Partner Promo
-                       </span>
-                       <span class="text-[10px] bg-amber-200 text-amber-900 font-semibold px-2 py-0.5 rounded-full uppercase">Sponsored / Ad</span>
-                   </div>
-                   <div class="p-4">
-                       <div class="relative group overflow-hidden rounded-lg mb-3 bg-gray-100 aspect-video flex items-center justify-center">
-                           <img src="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=600&q=80" alt="Burger Promo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                           <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded">Limited Offer</span>
-                       </div>
-                       <h4 class="font-bold text-gray-900 text-sm mb-1 line-clamp-1 hover:text-emerald-700 transition-colors">Burger Bundle Special Deal!</h4>
-                       <p class="text-xs text-gray-700 mb-3 leading-relaxed">
-                           Gamitin ang promo code na <strong class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">KIWIBATANGAS</strong> para sa libreng delivery.
-                       </p>
-                       <a href="#" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg shadow-xs transition-all duration-200 flex items-center justify-center gap-2 group">
-                           <span>Alamin Pa</span>
-                           <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
-                       </a>
-                   </div>
-               </div>
+               @php
+    // Kunin ang mga active ads mula sa database
+    $dynamicAds = \App\Models\Ad::latest()->get();
+@endphp
+
+@forelse($dynamicAds as $ad)
+<div class="bg-white border border-amber-200 rounded-xl shadow-xs overflow-hidden news-card mb-4">
+    <div class="bg-amber-50 px-4 py-2 border-b border-amber-100 flex justify-between items-center">
+        <span class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-bullhorn text-amber-600"></i> {{ $ad->badge_text ?? 'Kiwi Partner Promo' }}
+        </span>
+        <span class="text-[10px] bg-amber-200 text-amber-900 font-semibold px-2 py-0.5 rounded-full uppercase">Sponsored / Ad</span>
+    </div>
+    <div class="p-4">
+        @if($ad->image_url)
+        <div class="relative group overflow-hidden rounded-lg mb-3 bg-gray-100 aspect-video flex items-center justify-center">
+            <img src="{{ $ad->image_url }}" alt="{{ $ad->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+            <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium px-2 py-0.5 rounded">Limited Offer</span>
+        </div>
+        @endif
+        <h4 class="font-bold text-gray-900 text-sm mb-1 line-clamp-1 hover:text-emerald-700 transition-colors">{{ $ad->title }}</h4>
+        
+        @if($ad->description)
+        <p class="text-xs text-gray-700 mb-2 leading-relaxed">
+            {{ $ad->description }}
+        </p>
+        @endif
+
+        @if($ad->promo_code)
+        <p class="text-xs text-gray-700 mb-3 leading-relaxed">
+            Gamitin ang promo code na <strong class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{{ $ad->promo_code }}</strong>.
+        </p>
+        @endif
+
+        <a href="{{ $ad->button_link ?? '#' }}" target="_blank" class="block w-full text-center bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg shadow-xs transition-all duration-200 flex items-center justify-center gap-2 group">
+            <span>{{ $ad->button_text ?? 'Alamin Pa' }}</span>
+            <i class="fa-solid fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+        </a>
+    </div>
+</div>
+@empty
+<!-- Kung walang ads, hindi na magpapakita ng lumang hardcode kundi malinis na mawawala -->
+@endforelse
 
                <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm news-card">
                    <h2 class="text-sm font-black border-b-2 border-emerald-700 pb-2 mb-3 uppercase tracking-wider text-gray-900 flex justify-between items-center">

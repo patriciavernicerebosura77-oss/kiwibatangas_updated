@@ -16,6 +16,7 @@ class AdminController extends Controller
         $categoryCounts = [];
 
         foreach ($categories as $cat) {
+            // Ginamit ang pangalan (string) dahil ito ang column sa articles table
             $categoryCounts[$cat->name] = Article::where('category', $cat->name)->count();
         }
 
@@ -143,7 +144,6 @@ class AdminController extends Controller
         return back()->with('success', 'Matagumpay na na-delete ang balita!');
     }
 
-    // MAGDAGDAG NG KATEGORYA MAY KASAMANG SORT ORDER
     public function storeCategory(Request $request)
     {
         $request->validate([
@@ -160,7 +160,6 @@ class AdminController extends Controller
         return back()->with('success', 'Matagumpay na naidagdag ang bagong kategorya!');
     }
 
-    // I-UPDATE ANG KATEGORYA AT SORT ORDER
     public function updateCategory(Request $request, $id)
     {
         $request->validate([
@@ -169,10 +168,17 @@ class AdminController extends Controller
         ]);
 
         $category = Category::findOrFail($id);
+        $oldName = $category->name; // Kunin ang lumang pangalan bago i-update
+
         $category->update([
             'name' => $request->name,
             'slug' => Str::slug($request->name),
             'sort_order' => $request->sort_order,
+        ]);
+
+        // I-update din ang pangalan sa articles table para mag-sync agad
+        Article::where('category', $oldName)->update([
+            'category' => $request->name
         ]);
 
         return back()->with('success', 'Matagumpay na na-update ang kategorya!');
@@ -186,7 +192,6 @@ class AdminController extends Controller
         return back()->with('success', 'Matagumpay na na-delete ang kategorya!');
     }
 
-    // <--- Idinagdag para i-save ang bagong pagkakasunod-sunod galing sa Drag & Drop
     public function reorderCategories(Request $request)
     {
         if ($request->has('order')) {
