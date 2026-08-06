@@ -271,7 +271,7 @@
                 </div>
             </div>
 
-            <!-- TAB 4: SUBSCRIBERS MANAGEMENT (NAG-AALOK NG BLOCK & STOP SUBSCRIPTION) -->
+            <!-- TAB 4: SUBSCRIBERS MANAGEMENT -->
             <div id="tab-subscribers" class="tab-content hidden space-y-6">
                 <div class="bg-white p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
                     <div class="flex justify-between items-center">
@@ -528,7 +528,7 @@
 
                 <div class="flex flex-wrap gap-6 text-xs font-semibold pt-1">
                     <label class="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" name="is_featured" value="1" class="rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"> Is Featured</label>
-                    <label class="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" name="is_breaking" value="1" class="rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"> Breaking News</label>
+                    <!-- <label class="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" name="is_breaking" value="1" class="rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"> Breaking News</label> -->
                 </div>
 
                 <div class="flex justify-end gap-3.5 pt-5 border-t border-slate-200">
@@ -759,7 +759,12 @@
 
     <!-- JavaScript & Chart Setup -->
     <script>
+        // FUNCTION PARA SA TAB SWITCHING AT PAG-PERSIST NG CURRENT TAB STATE
         function switchTab(tabId) {
+            // Tiyakin na umiiral ang target tab bago ilipat
+            let targetTab = document.getElementById('tab-' + tabId);
+            if (!targetTab) return;
+
             document.querySelectorAll('.tab-content').forEach(el => {
                 el.classList.add('hidden');
             });
@@ -767,14 +772,35 @@
                 el.classList.remove('bg-slate-900', 'text-white', 'shadow-sm');
                 el.classList.add('text-slate-600', 'hover:text-slate-900');
             });
-            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            
+            targetTab.classList.remove('hidden');
             
             let activeTab = document.getElementById('nav-' + tabId);
             if(activeTab) {
                 activeTab.classList.remove('text-slate-600', 'hover:text-slate-900');
                 activeTab.classList.add('bg-slate-900', 'text-white', 'shadow-sm');
             }
+
+            // Isave sa LocalStorage at palitan ang URL hash nang walang nakakairitang page jump
+            localStorage.setItem('activeAdminTab', tabId);
+            history.replaceState(null, null, '#' + tabId);
         }
+
+        // KUSA NITING BABASAHIN ANG LAST TAB MULA SA LOCALSTORAGE O SA URL HASH KAPAG NAG-RELOAD
+        document.addEventListener("DOMContentLoaded", function () {
+            let urlHash = window.location.hash.replace('#', '');
+            let savedTab = localStorage.getItem('activeAdminTab');
+            
+            let tabToOpen = 'dashboard';
+
+            if (urlHash && document.getElementById('tab-' + urlHash)) {
+                tabToOpen = urlHash;
+            } else if (savedTab && document.getElementById('tab-' + savedTab)) {
+                tabToOpen = savedTab;
+            }
+
+            switchTab(tabToOpen);
+        });
 
         // Initialize SortableJS for Category Drag & Drop
         document.addEventListener("DOMContentLoaded", function () {
@@ -848,17 +874,10 @@
         }
 
         function reloadToCategoriesTab() {
-            window.location.href = "{{ route('admin.dashboard') }}#categories";
+            localStorage.setItem('activeAdminTab', 'categories');
+            window.location.hash = 'categories';
             location.reload();
         }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            let hash = window.location.hash;
-            if (hash) {
-                let tabName = hash.replace('#', '');
-                switchTab(tabName);
-            }
-        });
 
         const ctx = document.getElementById('performanceChart').getContext('2d');
         const chartData = {

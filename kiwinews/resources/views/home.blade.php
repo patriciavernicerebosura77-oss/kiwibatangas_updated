@@ -364,7 +364,7 @@
                <section class="scroll-fade">
                    <div class="flex items-center justify-between border-b-2 border-emerald-700 pb-2 mb-6">
                        <div>
-                           <p class="text-xs font-black uppercase tracking-wider text-gray-500">Pinakabagong Balita</p>
+                           <p class="text-xs font-black uppercase tracking-wider text-gray-500">Featured News</p>
                            <h2 class="text-2xl font-black uppercase text-emerald-900 mt-1">Mga Balita</h2>
                        </div>
                    </div>
