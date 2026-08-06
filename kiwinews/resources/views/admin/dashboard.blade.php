@@ -356,94 +356,217 @@
                 </div>
             </div>
 
-            <!-- TAB 5: ADS MANAGEMENT -->
-            <div id="tab-ads" class="tab-content hidden space-y-6">
-                <div class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm">
-                    <div class="flex justify-between items-center mb-6">
-                        <div>
-                            <h3 class="font-extrabold text-slate-900 text-sm uppercase tracking-wider text-emerald-700 flex items-center gap-2.5">
-                                <i class="fa-solid fa-bullhorn text-emerald-600 text-base"></i> Pamamahala ng mga Ads (Kiwi Partner Promo)
-                            </h3>
-                            <p class="text-xs text-slate-400 mt-1">Magdagdag, mag-edit, at magtakda ng expiration/time remaining para sa mga sponsored ads.</p>
-                        </div>
-                        <button onclick="openAdModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold px-5 py-3 rounded-2xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer flex items-center gap-2">
-                            <i class="fa-solid fa-plus text-sm"></i> Magdagdag ng Ad
-                        </button>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-400 uppercase text-[11px] tracking-wider border-b border-slate-200">
-                                    <th class="py-4 px-5 font-bold">Banner / Title</th>
-                                    <th class="py-4 px-5 font-bold">Badge / Promo</th>
-                                    <th class="py-4 px-5 font-bold">Time Remaining (Expiration)</th>
-                                    <th class="py-4 px-5 font-bold">Status</th>
-                                    <th class="py-4 px-5 font-bold text-right">Aksyon</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                @php
-                                    $allAds = \App\Models\Ad::latest()->get();
-                                @endphp
-                                @forelse($allAds as $ad)
-                                    <tr class="hover:bg-slate-50/60 transition-all text-xs">
-                                        <td class="py-4 px-5 font-bold text-slate-900 flex items-center gap-3">
-                                            @if($ad->image_url)
-                                                <img src="{{ $ad->image_url }}" class="w-12 h-10 rounded-lg object-cover border border-slate-200" alt="">
-                                            @endif
-                                            <div>
-                                                <div class="font-bold text-slate-900 line-clamp-1">{{ $ad->title }}</div>
-                                                <a href="{{ $ad->button_link }}" target="_blank" class="text-[10px] text-emerald-600 hover:underline">{{ $ad->button_link }}</a>
-                                            </div>
-                                        </td>
-                                        <td class="py-4 px-5">
-                                            <span class="bg-amber-100 text-amber-800 text-[10px] px-2.5 py-1 rounded-md font-bold">{{ $ad->badge_text }}</span>
-                                            @if($ad->promo_code)
-                                                <div class="text-[10px] text-slate-500 mt-0.5">Code: <span class="font-bold text-emerald-700">{{ $ad->promo_code }}</span></div>
-                                            @endif
-                                        </td>
-                                        <td class="py-4 px-5 font-medium text-slate-600">
-                                            @if($ad->expires_at)
-                                                @php
-                                                    $expiry = \Carbon\Carbon::parse($ad->expires_at);
-                                                    $isExpired = $expiry->isPast();
-                                                @endphp
-                                                @if($isExpired)
-                                                    <span class="text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded">Expired na</span>
-                                                @else
-                                                    <span class="text-emerald-700 font-bold bg-emerald-50 px-2 py-1 rounded">{{ $expiry->diffForHumans() }}</span>
-                                                @endif
-                                            @else
-                                                <span class="text-slate-400">Walang expiration</span>
-                                            @endif
-                                        </td>
-                                        <td class="py-4 px-5">
-                                            @if($ad->is_active)
-                                                <span class="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-1 rounded font-bold">Active</span>
-                                            @else
-                                                <span class="bg-slate-200 text-slate-600 text-[10px] px-2 py-1 rounded font-bold">Inactive</span>
-                                            @endif
-                                        </td>
-                                        <td class="py-4 px-5 text-right space-x-2">
-                                            <button onclick="openEditAdModal({{ $ad->id }})" class="text-emerald-600 hover:text-emerald-700 font-bold p-1.5 transition-all cursor-pointer text-sm" title="I-edit"><i class="fa-solid fa-pen-to-square"></i></button>
-                                            <form action="{{ route('admin.ads.destroy', $ad->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Sigurado ka bang gusto mong burahin ang ad na ito?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold p-1.5 transition-all cursor-pointer text-sm" title="Burahin"><i class="fa-solid fa-trash"></i></button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="py-8 text-center text-slate-400 font-medium text-sm">Wala pang nakikitang ads.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <!-- TAB 5: ADS MANAGEMENT (WITH ADS INQUIRIES & ACTIVE ADS) -->
+<div id="tab-ads" class="tab-content hidden space-y-8">
+    
+    <!-- SECTION 1: ADS INQUIRIES PAGE (MGA HILING / INQUIRIES NG SPONSOR) -->
+    <div class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
+            <div>
+                <h3 class="font-extrabold text-slate-900 text-sm uppercase tracking-wider text-emerald-700 flex items-center gap-2.5">
+                    <i class="fa-solid fa-envelope-open-text text-emerald-600 text-base"></i> Mga Inquiry sa Ads & Sponsorship
+                </h3>
+                <p class="text-xs text-slate-400 mt-1">Suriin ang mga humihiling na magpa-ad, magpadala ng application form, mag-email, o i-reject ang inquiry.</p>
             </div>
+            <span class="bg-emerald-100 text-emerald-800 text-xs px-3.5 py-1.5 rounded-full font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-inbox text-emerald-600"></i>
+                {{ isset($inquiries) ? count($inquiries) : 0 }} Bagong Inquiry
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-400 uppercase text-[11px] tracking-wider border-b border-slate-200">
+                        <th class="py-4 px-5 font-bold">Nag-inquire / Negosyo</th>
+                        <th class="py-4 px-5 font-bold">Mensahe / Detalye</th>
+                        <th class="py-4 px-5 font-bold">Petsa</th>
+                        <th class="py-4 px-5 font-bold">Status</th>
+                        <th class="py-4 px-5 font-bold text-right">Aksyon</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @php
+                        $allInquiries = isset($inquiries) ? $inquiries : \App\Models\AdInquiry::latest()->get();
+                    @endphp
+                    @forelse($allInquiries as $inquiry)
+                        <tr class="hover:bg-slate-50/60 transition-all text-xs">
+                            <td class="py-4 px-5">
+                                <div class="font-bold text-slate-900 text-sm">{{ $inquiry->name }}</div>
+                                <div class="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                                    <i class="fa-regular fa-envelope text-slate-400"></i> {{ $inquiry->email }}
+                                </div>
+                                @if($inquiry->business_name)
+                                    <div class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded w-fit mt-1 border border-emerald-200/60">
+                                        {{ $inquiry->business_name }}
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="py-4 px-5 text-slate-600 max-w-xs">
+                                <p class="line-clamp-2 text-xs leading-relaxed">{{ $inquiry->message ?? 'Walang nakalagay na karagdagang mensahe.' }}</p>
+                            </td>
+                            <td class="py-4 px-5 text-slate-500 font-medium text-[11px]">
+                                {{ $inquiry->created_at ? $inquiry->created_at->format('M d, Y - h:i A') : 'N/A' }}
+                            </td>
+                            <td class="py-4 px-5">
+                                @if($inquiry->status == 'form_sent')
+                                    <span class="bg-blue-100 text-blue-800 text-[10px] px-2.5 py-1 rounded-md font-bold inline-flex items-center gap-1">
+                                        <i class="fa-solid fa-paper-plane"></i> Form Sent
+                                    </span>
+                                @elseif($inquiry->status == 'rejected')
+                                    <span class="bg-rose-100 text-rose-800 text-[10px] px-2.5 py-1 rounded-md font-bold inline-flex items-center gap-1">
+                                        <i class="fa-solid fa-xmark"></i> Rejected
+                                    </span>
+                                @else
+                                    <span class="bg-amber-100 text-amber-800 text-[10px] px-2.5 py-1 rounded-md font-bold inline-flex items-center gap-1">
+                                        <i class="fa-solid fa-clock"></i> Pending
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="py-4 px-5 text-right space-x-1.5">
+                                <!-- OPTION 1: SEND AD FORM VIA EMAIL -->
+                                <button onclick="openSendFormModal('{{ $inquiry->email }}', '{{ $inquiry->name }}', {{ $inquiry->id }})" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold px-3 py-1.5 rounded-xl border border-emerald-200 text-[11px] transition-all cursor-pointer inline-flex items-center gap-1" title="Ipadala ang Ad Registration Form">
+                                    <i class="fa-solid fa-file-signature text-emerald-600"></i> Send Form
+                                </button>
+
+                                <!-- OPTION 2: MESSAGE USER VIA EMAIL -->
+                                <button onclick="openMessageUserModal('{{ $inquiry->email }}', '{{ $inquiry->name }}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] transition-all cursor-pointer inline-flex items-center gap-1" title="Mag-email sa User">
+                                    <i class="fa-solid fa-envelope text-slate-600"></i> Email
+                                </button>
+
+                                <!-- OPTION 3: REJECT INQUIRY -->
+                                <form action="{{ route('admin.ads.inquiries.reject', $inquiry->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Sigurado ka bang gusto mong i-reject ang inquiry na ito?');">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold p-1.5 rounded-xl border border-rose-200 text-xs transition-all cursor-pointer" title="I-reject ang Inquiry">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="py-8 text-center text-slate-400 font-medium text-sm">
+                                <i class="fa-solid fa-inbox text-2xl mb-2 text-slate-300 block"></i>
+                                Wala pang natatanggap na inquiry para sa Ads.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SECTION 2: ACTIVE & PUBLISHED ADS TABLE -->
+    <div class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <div>
+                <h3 class="font-extrabold text-slate-900 text-sm uppercase tracking-wider text-emerald-700 flex items-center gap-2.5">
+                    <i class="fa-solid fa-bullhorn text-emerald-600 text-base"></i> Pamamahala ng mga Aktibong Ads (Kiwi Partner Promo)
+                </h3>
+                <p class="text-xs text-slate-400 mt-1">Magdagdag, mag-edit, at magtakda ng expiration/time remaining para sa mga sponsored ads.</p>
+            </div>
+            <button onclick="openAdModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold px-5 py-3 rounded-2xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer flex items-center gap-2">
+                <i class="fa-solid fa-plus text-sm"></i> Magdagdag ng Ad
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-400 uppercase text-[11px] tracking-wider border-b border-slate-200">
+                        <th class="py-4 px-5 font-bold">Banner / Title</th>
+                        <th class="py-4 px-5 font-bold">Badge / Promo</th>
+                        <th class="py-4 px-5 font-bold">Time Remaining (Expiration)</th>
+                        <th class="py-4 px-5 font-bold">Status</th>
+                        <th class="py-4 px-5 font-bold text-right">Aksyon</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @php
+                        $allAds = isset($ads) ? $ads : \App\Models\Ad::latest()->get();
+                    @endphp
+                    @forelse($allAds as $ad)
+                        <tr class="hover:bg-slate-50/60 transition-all text-xs">
+                            <td class="py-4 px-5 font-bold text-slate-900 flex items-center gap-3">
+                                @if($ad->image_url)
+                                    <img src="{{ $ad->image_url }}" class="w-12 h-10 rounded-lg object-cover border border-slate-200 shadow-2xs" alt="Ad Image" onerror="this.onerror=null;this.src='https://via.placeholder.com/150?text=No+Image';">
+                                @else
+                                    <div class="w-12 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+                                        <i class="fa-solid fa-image text-xs"></i>
+                                    </div>
+                                @endif
+                                <div class="max-w-xs">
+                                    <div class="font-bold text-slate-900 line-clamp-1 text-sm">{{ $ad->title }}</div>
+                                    <a href="{{ $ad->button_link }}" target="_blank" class="text-[10px] text-emerald-600 hover:underline flex items-center gap-1 mt-0.5">
+                                        <i class="fa-solid fa-link text-[9px]"></i> {{ \Illuminate\Support\Str::limit($ad->button_link, 30) }}
+                                    </a>
+                                </div>
+                            </td>
+                            <td class="py-4 px-5">
+                                @if($ad->badge_text)
+                                    <span class="bg-amber-100 text-amber-800 text-[10px] px-2.5 py-1 rounded-md font-bold inline-block">{{ $ad->badge_text }}</span>
+                                @else
+                                    <span class="text-slate-400 text-[10px] italic">Walang badge</span>
+                                @endif
+
+                                @if($ad->promo_code)
+                                    <div class="text-[10px] text-slate-500 mt-1">Code: <span class="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60">{{ $ad->promo_code }}</span></div>
+                                @endif
+                            </td>
+                            <td class="py-4 px-5 font-medium text-slate-600">
+                                @if($ad->expires_at)
+                                    @php
+                                        $expiry = \Carbon\Carbon::parse($ad->expires_at);
+                                        $isExpired = $expiry->isPast();
+                                    @endphp
+                                    @if($isExpired)
+                                        <span class="text-rose-600 font-bold bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-md text-[10px] inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-clock-rotate-left"></i> Expired na
+                                        </span>
+                                    @else
+                                        <span class="text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md text-[10px] inline-flex items-center gap-1">
+                                            <i class="fa-regular fa-clock"></i> {{ $expiry->diffForHumans() }}
+                                        </span>
+                                    @endif
+                                @else
+                                    <span class="text-slate-400 bg-slate-100 px-2 py-0.5 rounded text-[10px]">Walang expiration</span>
+                                @endif
+                            </td>
+                            <td class="py-4 px-5">
+                                @if($ad->is_active)
+                                    <span class="bg-emerald-100 text-emerald-800 text-[10px] px-2.5 py-1 rounded-md font-bold inline-flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                                    </span>
+                                @else
+                                    <span class="bg-slate-200 text-slate-600 text-[10px] px-2.5 py-1 rounded-md font-bold inline-flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Inactive
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="py-4 px-5 text-right space-x-1">
+                                <button onclick="openEditAdModal({{ $ad->id }})" class="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg font-bold p-2 transition-all cursor-pointer text-sm" title="I-edit">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <form action="{{ route('admin.ads.destroy', $ad->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Sigurado ka bang gusto mong burahin ang ad na ito?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg font-bold p-2 transition-all cursor-pointer text-sm" title="Burahin">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="py-8 text-center text-slate-400 font-medium text-sm">Wala pang nakikitang ads.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
             <!-- TAB 6: SYSTEM ANALYTICS -->
             <div id="tab-analytics" class="tab-content hidden space-y-6">
@@ -528,7 +651,6 @@
 
                 <div class="flex flex-wrap gap-6 text-xs font-semibold pt-1">
                     <label class="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" name="is_featured" value="1" class="rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"> Is Featured</label>
-                    <!-- <label class="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" name="is_breaking" value="1" class="rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"> Breaking News</label> -->
                 </div>
 
                 <div class="flex justify-end gap-3.5 pt-5 border-t border-slate-200">
@@ -652,46 +774,46 @@
                 @csrf
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Ad Title</label>
-                    <input type="text" name="title" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                    <input type="text" name="title" placeholder="Hal: Promo Diskwento Para sa Tricycle" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Image URL</label>
-                    <input type="url" name="image_url" placeholder="https://example.com/banner.jpg" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                    <input type="url" name="image_url" placeholder="https://example.com/banner.jpg" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Badge Text (Hal: Limited Offer)</label>
-                    <input type="text" name="badge_text" value="Limited Offer" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                    <input type="text" name="badge_text" value="Limited Offer" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Description / Promo details</label>
-                    <textarea name="description" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600"></textarea>
+                    <textarea name="description" rows="2" placeholder="Maikling paglalarawan ng promo..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none"></textarea>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Promo Code</label>
-                        <input type="text" name="promo_code" placeholder="HAL: PARATRICYCLE" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                        <input type="text" name="promo_code" placeholder="HAL: KIWI2026" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Button Text</label>
-                        <input type="text" name="button_text" value="Alamin Pa" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                        <input type="text" name="button_text" value="Alamin Pa" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Button Link (URL)</label>
-                    <input type="url" name="button_link" placeholder="https://paratricycleapp.com" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                    <input type="url" name="button_link" placeholder="https://paratricycleapp.com" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Expiration Date & Time (Time Remaining)</label>
-                    <input type="datetime-local" name="expires_at" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600">
+                    <input type="datetime-local" name="expires_at" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none">
                 </div>
                 <div class="flex items-center gap-2 pt-2">
-                    <input type="checkbox" name="is_active" value="1" checked class="w-4 h-4 text-emerald-600 rounded">
-                    <label class="text-xs font-bold text-slate-700">Active agad sa Sidebar</label>
+                    <input type="checkbox" id="add_is_active" name="is_active" value="1" checked class="w-4 h-4 text-emerald-600 rounded">
+                    <label for="add_is_active" class="text-xs font-bold text-slate-700 cursor-pointer select-none">Active agad sa Sidebar</label>
                 </div>
 
                 <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
-                    <button type="button" onclick="closeAdModal()" class="bg-slate-100 px-5 py-2.5 rounded-xl font-bold text-xs">Kanselahin</button>
-                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold text-xs">I-save ang Ad</button>
+                    <button type="button" onclick="closeAdModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-xl font-bold text-xs cursor-pointer">Kanselahin</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold text-xs cursor-pointer shadow-md">I-save ang Ad</button>
                 </div>
             </form>
         </div>
@@ -712,46 +834,46 @@
                 @method('PUT')
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Ad Title</label>
-                    <input type="text" id="edit_ad_title" name="title" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                    <input type="text" id="edit_ad_title" name="title" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Image URL</label>
-                    <input type="url" id="edit_ad_image_url" name="image_url" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                    <input type="url" id="edit_ad_image_url" name="image_url" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Badge Text</label>
-                    <input type="text" id="edit_ad_badge_text" name="badge_text" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                    <input type="text" id="edit_ad_badge_text" name="badge_text" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Description</label>
-                    <textarea id="edit_ad_description" name="description" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs"></textarea>
+                    <textarea id="edit_ad_description" name="description" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none"></textarea>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Promo Code</label>
-                        <input type="text" id="edit_ad_promo_code" name="promo_code" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                        <input type="text" id="edit_ad_promo_code" name="promo_code" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Button Text</label>
-                        <input type="text" id="edit_ad_button_text" name="button_text" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                        <input type="text" id="edit_ad_button_text" name="button_text" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Button Link (URL)</label>
-                    <input type="url" id="edit_ad_button_link" name="button_link" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                    <input type="url" id="edit_ad_button_link" name="button_link" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Expiration Date & Time</label>
-                    <input type="datetime-local" id="edit_ad_expires_at" name="expires_at" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                    <input type="datetime-local" id="edit_ad_expires_at" name="expires_at" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none">
                 </div>
                 <div class="flex items-center gap-2 pt-2">
                     <input type="checkbox" id="edit_ad_is_active" name="is_active" value="1" class="w-4 h-4 text-emerald-600 rounded">
-                    <label class="text-xs font-bold text-slate-700">Active</label>
+                    <label for="edit_ad_is_active" class="text-xs font-bold text-slate-700 cursor-pointer select-none">Active Status</label>
                 </div>
 
                 <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
-                    <button type="button" onclick="closeEditAdModal()" class="bg-slate-100 px-5 py-2.5 rounded-xl font-bold text-xs">Kanselahin</button>
-                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold text-xs">I-save ang Pagbabago</button>
+                    <button type="button" onclick="closeEditAdModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-xl font-bold text-xs cursor-pointer">Kanselahin</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold text-xs cursor-pointer shadow-md">I-save ang Pagbabago</button>
                 </div>
             </form>
         </div>
@@ -761,7 +883,6 @@
     <script>
         // FUNCTION PARA SA TAB SWITCHING AT PAG-PERSIST NG CURRENT TAB STATE
         function switchTab(tabId) {
-            // Tiyakin na umiiral ang target tab bago ilipat
             let targetTab = document.getElementById('tab-' + tabId);
             if (!targetTab) return;
 
@@ -781,12 +902,10 @@
                 activeTab.classList.add('bg-slate-900', 'text-white', 'shadow-sm');
             }
 
-            // Isave sa LocalStorage at palitan ang URL hash nang walang nakakairitang page jump
             localStorage.setItem('activeAdminTab', tabId);
             history.replaceState(null, null, '#' + tabId);
         }
 
-        // KUSA NITING BABASAHIN ANG LAST TAB MULA SA LOCALSTORAGE O SA URL HASH KAPAG NAG-RELOAD
         document.addEventListener("DOMContentLoaded", function () {
             let urlHash = window.location.hash.replace('#', '');
             let savedTab = localStorage.getItem('activeAdminTab');
@@ -959,36 +1078,148 @@
                     document.getElementById('edit_is_breaking').checked = data.is_breaking == 1;
                     
                     document.getElementById('editArticleModal').classList.remove('hidden');
-                });
+                })
+                .catch(err => console.error('Error fetching article:', err));
         }
 
         function closeEditModal() {
             document.getElementById('editArticleModal').classList.add('hidden');
         }
 
-        function openAdModal() { document.getElementById('adModal').classList.remove('hidden'); }
-        function closeAdModal() { document.getElementById('adModal').classList.add('hidden'); }
+        // AD MODALS & AJAX FUNCTIONS
+        function openAdModal() { 
+            document.getElementById('adModal').classList.remove('hidden'); 
+        }
+        function closeAdModal() { 
+            document.getElementById('adModal').classList.add('hidden'); 
+        }
 
         function openEditAdModal(id) {
             fetch(`/admin/ads/${id}/edit`)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.json();
+                })
                 .then(data => {
                     document.getElementById('editAdForm').action = `/admin/ads/${id}`;
-                    document.getElementById('edit_ad_title').value = data.title;
-                    document.getElementById('edit_ad_image_url').value = data.image_url;
+                    document.getElementById('edit_ad_title').value = data.title || '';
+                    document.getElementById('edit_ad_image_url').value = data.image_url || '';
                     document.getElementById('edit_ad_badge_text').value = data.badge_text || '';
                     document.getElementById('edit_ad_description').value = data.description || '';
                     document.getElementById('edit_ad_promo_code').value = data.promo_code || '';
                     document.getElementById('edit_ad_button_text').value = data.button_text || '';
-                    document.getElementById('edit_ad_button_link').value = data.button_link;
-                    if(data.expires_at) {
-                        document.getElementById('edit_ad_expires_at').value = data.expires_at.replace(' ', 'T').slice(0, 16);
+                    document.getElementById('edit_ad_button_link').value = data.button_link || '';
+                    
+                    // Format expiration date properly for datetime-local input
+                    if (data.expires_at) {
+                        let dt = new Date(data.expires_at);
+                        let localIso = new Date(dt.getTime() - (dt.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                        document.getElementById('edit_ad_expires_at').value = localIso;
+                    } else {
+                        document.getElementById('edit_ad_expires_at').value = '';
                     }
-                    document.getElementById('edit_ad_is_active').checked = data.is_active == 1;
+
+                    document.getElementById('edit_ad_is_active').checked = (parseInt(data.is_active) === 1 || data.is_active === true);
                     document.getElementById('editAdModal').classList.remove('hidden');
+                })
+                .catch(err => {
+                    console.error('Error loading ad details:', err);
+                    alert('Hindi ma-load ang datos ng ad. Pakisubukan muli.');
                 });
         }
-        function closeEditAdModal() { document.getElementById('editAdModal').classList.add('hidden'); }
+
+        function closeEditAdModal() { 
+            document.getElementById('editAdModal').classList.add('hidden'); 
+        }
+
+        // INQUIRY MODAL FUNCTIONS
+function openSendFormModal(email, name, inquiryId) {
+    document.getElementById('inquiry_id').value = inquiryId;
+    document.getElementById('email_action_type').value = 'send_form';
+    document.getElementById('inquiry_recipient_email').value = email;
+    document.getElementById('inquiryModalTitle').innerHTML = '<i class="fa-solid fa-file-signature text-base"></i> Magpadala ng Ad Form kay ' + name;
+    document.getElementById('inquiry_email_subject').value = 'Kiwi Batangas - Ad Submission Form & Partnership';
+    
+    // Automatic Template for sending the "Magdagdag ng Ad Form" link
+    let defaultFormLink = window.location.origin + '/partner/submit-ad?email=' + encodeURIComponent(email);
+    document.getElementById('inquiry_email_body').value = 
+`Magandang araw, ${name}!
+
+Salamat sa iyong interes na maging bahagi ng Kiwi Partner Promo / Sponsored Ads sa Kiwi Batangas Digital News Portal.
+
+Upang maipagpatuloy ang pagpaparehistro ng iyong Ad, mangyaring sagutan at i-upload ang detalye ng iyong advertisement sa link sa ibaba:
+
+Form Link: ${defaultFormLink}
+
+Kung mayroon kang karagdagang katanungan, maaari kang sumagot sa email na ito.
+
+Maraming Salamat,
+Kiwi Batangas Admin Team`;
+
+    document.getElementById('inquiryEmailModal').classList.remove('hidden');
+}
+
+function openMessageUserModal(email, name) {
+    document.getElementById('inquiry_id').value = '';
+    document.getElementById('email_action_type').value = 'general_message';
+    document.getElementById('inquiry_recipient_email').value = email;
+    document.getElementById('inquiryModalTitle').innerHTML = '<i class="fa-solid fa-envelope text-base"></i> Mag-email kay ' + name;
+    document.getElementById('inquiry_email_subject').value = 'Tungkol sa iyong Ads Inquiry - Kiwi Batangas';
+    document.getElementById('inquiry_email_body').value = 
+`Magandang araw, ${name}!
+
+Kaugnay ng iyong inquiry ukol sa advertisement sa Kiwi Batangas:
+
+[Ilagay ang iyong mensahe dito]
+
+Maraming salamat!`;
+
+    document.getElementById('inquiryEmailModal').classList.remove('hidden');
+}
+
+function closeInquiryEmailModal() {
+    document.getElementById('inquiryEmailModal').classList.add('hidden');
+}
     </script>
+
+    <!-- SEND AD FORM & MESSAGE EMAIL MODAL -->
+<div id="inquiryEmailModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden overflow-y-auto">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden my-8 border border-slate-100">
+        <div class="bg-emerald-700 text-white px-8 py-5 flex justify-between items-center" id="inquiryModalHeader">
+            <h3 class="font-black text-sm uppercase tracking-wider flex items-center gap-2.5" id="inquiryModalTitle">
+                <i class="fa-solid fa-paper-plane text-base"></i> Magpadala ng Ad Form sa Email
+            </h3>
+            <button onclick="closeInquiryEmailModal()" class="text-white hover:text-emerald-200 font-bold text-2xl cursor-pointer">&times;</button>
+        </div>
+
+        <form id="inquiryEmailForm" action="{{ route('admin.ads.inquiries.send-email') }}" method="POST" class="p-8 space-y-4">
+            @csrf
+            <input type="hidden" id="inquiry_id" name="inquiry_id" value="">
+            <input type="hidden" id="email_action_type" name="action_type" value="send_form">
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Para kay (Recipient)</label>
+                <input type="email" id="inquiry_recipient_email" name="email" required readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl p-3 text-xs text-slate-600 font-bold focus:outline-none">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Subject ng Email</label>
+                <input type="text" id="inquiry_email_subject" name="subject" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Mensahe / Form Link Body</label>
+                <textarea id="inquiry_email_body" name="message" rows="6" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:bg-white focus:border-emerald-600 focus:outline-none leading-relaxed"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                <button type="button" onclick="closeInquiryEmailModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-xl font-bold text-xs cursor-pointer">Kanselahin</button>
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold text-xs cursor-pointer shadow-md flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> Ipadala na
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 </body>
 </html>

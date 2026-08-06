@@ -8,6 +8,24 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\Admin\AdController;
 use App\Http\Controllers\NewsletterController;
+use App\Models\AdInquiry;
+// Ads Inquiries Admin Routes
+Route::patch('/admin/ads/inquiries/{id}/reject', [AdController::class, 'rejectInquiry'])->name('admin.ads.inquiries.reject');
+Route::post('/admin/ads/inquiries/send-email', [AdController::class, 'sendInquiryEmail'])->name('admin.ads.inquiries.send-email');
+
+Route::post('/ad-inquiries', function (Request $request) {
+    $validated = $request->validate([
+        'name'    => 'required|string|max:255',
+        'company' => 'nullable|string|max:255',
+        'phone'   => 'nullable|string|max:255',
+        'email'   => 'required|email|max:255',
+        'message' => 'required|string',
+    ]);
+
+    AdInquiry::create($validated);
+
+    return response()->json(['success' => true, 'message' => 'Ad inquiry saved successfully!']);
+});
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     // Ibang admin routes...

@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Kiwi Batangas | Digital News Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Alpine.js (Kinakailangan para sa smooth 3-sec fade toast notification at Modals) -->
+    <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     <style>
@@ -29,7 +30,15 @@
         }
     </style>
 </head>
-<body class="bg-white text-gray-900 font-sans" x-data="{ showScrollTop: false, openAdModal: false }" @scroll.window="showScrollTop = (window.pageYOffset > 300)">
+<body class="bg-white text-gray-900 font-sans" 
+      x-data="{ 
+          showScrollTop: false, 
+          openAdModal: false,
+          adLoading: false,
+          showAdToast: false,
+          adFormData: { name: '', company: '', phone: '', email: '', message: '' }
+      }" 
+      @scroll.window="showScrollTop = (window.pageYOffset > 300)">
 
 <!-- TOAST NOTIFICATION (TOP-CENTER FITTED CARD) -->
 @if(session('success') || session('error'))
@@ -644,7 +653,7 @@
                 <p class="font-bold text-gray-900 text-xs uppercase tracking-wider mb-3 border-b border-gray-300 pb-1">Tulong at Impormasyon</p>
                 <ul class="text-xs space-y-2">
                     <li><a href="#" class="hover:text-emerald-700 transition">Tungkol sa Amin</a></li>
-                    <li><button @click="openAdModal = true" class="hover:text-emerald-700 transition text-left">Mag-Advertise sa Amin</button></li>
+                    <li><button @click="openAdModal = true" class="hover:text-emerald-700 transition text-left cursor-pointer">Mag-Advertise sa Amin</button></li>
                 </ul>
             </div>
             <div>
@@ -664,7 +673,7 @@
     <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
         <!-- ADVERTISE WITH US / EMAIL US BUTTON -->
         <button @click="openAdModal = true"
-                class="group bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white p-3.5 rounded-full shadow-2xl flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none border-2 border-white"
+                class="group bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white p-3.5 rounded-full shadow-2xl flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none border-2 border-white cursor-pointer"
                 title="Magpalagay ng Ad / Email Us">
             <i class="fa-solid fa-rectangle-ad text-lg"></i>
             <span class="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-300 text-xs font-bold pr-1">
@@ -674,6 +683,7 @@
 
         <!-- BACK TO TOP BUTTON -->
         <button x-show="showScrollTop"
+                x-cloak
                 x-transition:enter="transition ease-out duration-300"
                 x-transition:enter-start="opacity-0 translate-y-4 scale-75"
                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
@@ -681,7 +691,7 @@
                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                 x-transition:leave-end="opacity-0 translate-y-4 scale-75"
                 @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
-                class="bg-emerald-700 hover:bg-emerald-800 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-90 border-2 border-white focus:outline-none"
+                class="bg-emerald-700 hover:bg-emerald-800 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-90 border-2 border-white focus:outline-none cursor-pointer"
                 title="Bumalik sa Itaas">
             <i class="fa-solid fa-arrow-up text-base"></i>
         </button>
@@ -692,6 +702,7 @@
          x-cloak
          class="fixed inset-0 z-50 overflow-y-auto"
          style="display: none;">
+        
         <!-- Backdrop -->
         <div x-show="openAdModal"
              x-transition:enter="transition ease-out duration-300"
@@ -700,11 +711,11 @@
              x-transition:leave="transition ease-in duration-200"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
-             @click="openAdModal = false"
-             class="fixed inset-0 bg-black/60 backdrop-blur-xs"></div>
+             @click="if (!adLoading) openAdModal = false"
+             class="fixed inset-0 bg-black/60 backdrop-blur-xs z-40"></div>
 
-        <!-- Modal Dialog -->
-        <div class="flex min-h-full items-center justify-center p-4">
+        <!-- Modal Dialog Wrapper -->
+        <div class="relative z-50 flex min-h-full items-center justify-center p-4 pointer-events-none">
             <div x-show="openAdModal"
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="opacity-0 scale-95 translate-y-4"
@@ -712,7 +723,8 @@
                  x-transition:leave="transition ease-in duration-200"
                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                  x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-                 class="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden z-10 border border-gray-100">
+                 @click.stop
+                 class="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-gray-100 pointer-events-auto">
                 
                 <!-- Modal Header -->
                 <div class="bg-gradient-to-r from-emerald-800 to-emerald-700 p-5 text-white flex justify-between items-center">
@@ -725,46 +737,87 @@
                             <p class="text-xs text-emerald-100">Ipaabot ang iyong negosyo sa libu-libong mamamayan!</p>
                         </div>
                     </div>
-                    <button @click="openAdModal = false" class="text-emerald-200 hover:text-white transition p-1">
+                    <button type="button" 
+                            @click="openAdModal = false" 
+                            :disabled="adLoading"
+                            class="text-emerald-200 hover:text-white transition p-1 cursor-pointer disabled:opacity-50">
                         <i class="fa-solid fa-xmark text-xl"></i>
                     </button>
                 </div>
 
                 <!-- Modal Form -->
-                <form onsubmit="handleAdInquirySubmit(event)" class="p-6 space-y-4">
+                <form @submit.prevent="submitAdInquiry($data)" class="p-6 space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Pangalan / Name <span class="text-red-500">*</span></label>
-                        <input type="text" id="ad_name" required placeholder="Juan Dela Cruz" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+                        <input type="text" 
+                               x-model="adFormData.name" 
+                               required 
+                               placeholder="Juan Dela Cruz" 
+                               :disabled="adLoading"
+                               class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition disabled:opacity-60">
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Pangalan ng Negosyo / Business</label>
-                            <input type="text" id="ad_company" placeholder="Hal. Batangas Bakery" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Business</label>
+                            <input type="text" 
+                                   x-model="adFormData.company" 
+                                   placeholder="Hal. Batangas Bakery" 
+                                   :disabled="adLoading"
+                                   class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition disabled:opacity-60">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Contact Number</label>
-                            <input type="tel" id="ad_phone" placeholder="09123456789" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+                            <input type="tel" 
+                                   x-model="adFormData.phone" 
+                                   placeholder="09123456789" 
+                                   :disabled="adLoading"
+                                   class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition disabled:opacity-60">
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address <span class="text-red-500">*</span></label>
-                        <input type="email" id="ad_email" required placeholder="juan@example.com" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+                        <input type="email" 
+                               x-model="adFormData.email" 
+                               required 
+                               placeholder="juan@example.com" 
+                               :disabled="adLoading"
+                               class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition disabled:opacity-60">
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Detalye ng Ad Inquiry / Mensahe <span class="text-red-500">*</span></label>
-                        <textarea id="ad_message" rows="3" required placeholder="Ilarawan ang iyong gustong ilagay na advertisement o promo..." class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition"></textarea>
+                        <textarea x-model="adFormData.message" 
+                                  rows="3" 
+                                  required 
+                                  placeholder="Ilarawan ang iyong gustong ilagay na advertisement o promo..." 
+                                  :disabled="adLoading"
+                                  class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition disabled:opacity-60"></textarea>
                     </div>
 
                     <div class="pt-2 flex items-center justify-end gap-3">
-                        <button type="button" @click="openAdModal = false" class="px-5 py-2.5 text-xs font-bold text-gray-600 hover:text-gray-800 transition">
+                        <button type="button" 
+                                @click="openAdModal = false" 
+                                :disabled="adLoading"
+                                class="px-5 py-2.5 text-xs font-bold text-gray-600 hover:text-gray-800 transition cursor-pointer disabled:opacity-50">
                             Kanselahin
                         </button>
-                        <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-2">
-                            <i class="fa-solid fa-paper-plane"></i>
-                            <span>Ipadala ang Email Inquiry</span>
+                        <button type="submit" 
+                                :disabled="adLoading"
+                                class="bg-emerald-700 hover:bg-emerald-800 disabled:bg-emerald-600 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed relative z-10">
+                            <template x-if="!adLoading">
+                                <span class="flex items-center gap-2">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                    <span>Ipadala ang Email Inquiry</span>
+                                </span>
+                            </template>
+                            <template x-if="adLoading">
+                                <span class="flex items-center gap-2">
+                                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                                    <span>Ipinapadala...</span>
+                                </span>
+                            </template>
                         </button>
                     </div>
                 </form>
@@ -772,21 +825,66 @@
         </div>
     </div>
 
+    <!-- SUCCESS TOAST NOTIFICATION FOR AD INQUIRY -->
+    <div x-show="showAdToast"
+         x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+         x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+         class="fixed bottom-6 left-6 z-50 bg-emerald-900 text-white p-4 rounded-2xl shadow-2xl flex items-start gap-3.5 border border-emerald-700/50 max-w-md"
+         style="display: none;">
+        <div class="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-circle-check text-xl"></i>
+        </div>
+        <div class="flex-1 text-xs leading-relaxed">
+            <p class="font-bold text-sm text-emerald-300 mb-0.5">Naipadala na ang Ad Inquiry!</p>
+            <p class="text-emerald-100">Mag-eemail sa inyo ang admin kapag nakita at nasuri na ang inyong mensahe para sa karagdagang detalye.</p>
+        </div>
+        <button type="button" @click="showAdToast = false" class="text-emerald-400 hover:text-white transition p-1 cursor-pointer">
+            <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+    </div>
+
 <script>
-    function handleAdInquirySubmit(e) {
-        e.preventDefault();
-        const name = document.getElementById('ad_name').value;
-        const company = document.getElementById('ad_company').value;
-        const phone = document.getElementById('ad_phone').value;
-        const email = document.getElementById('ad_email').value;
-        const message = document.getElementById('ad_message').value;
+    async function submitAdInquiry(adState) {
+    adState.adLoading = true;
 
-        const mailtoRecipient = 'ads@kiwibatangas.com';
-        const subject = encodeURIComponent(`[Kiwi Batangas Ad Inquiry] - ${company || name}`);
-        const body = encodeURIComponent(`Magandang araw Kiwi Batangas Team,\n\nAko ay interesadong magpalagay ng Advertisement sa inyong website.\n\nMga Detalye:\n- Pangalan: ${name}\n- Negosyo: ${company || 'N/A'}\n- Email: ${email}\n- Contact Number: ${phone || 'N/A'}\n\nMensahe / Ad Details:\n${message}\n\nSalamat!`);
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-        window.location.href = `mailto:${mailtoRecipient}?subject=${subject}&body=${body}`;
+        const response = await fetch('/ad-inquiries', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify(adState.adFormData)
+        });
+
+        if (response.ok) {
+            // Reset form
+            adState.adFormData = { name: '', company: '', phone: '', email: '', message: '' };
+            adState.openAdModal = false;
+            adState.showAdToast = true;
+
+            setTimeout(() => {
+                adState.showAdToast = false;
+            }, 5000);
+        } else {
+            const errorData = await response.json();
+            alert('May error sa validation o server: ' + (errorData.message || 'Pakisuri ang mga datos.'));
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Server connection error. Siguraduhing tumatakbo ang php artisan serve.');
+    } finally {
+        adState.adLoading = false;
     }
+}
 
     document.addEventListener("DOMContentLoaded", function () {
         const observerOptions = { root: null, rootMargin: '0px', threshold: 0.1 };
@@ -805,48 +903,48 @@
         });
     });
 
-let liveRates = [];
-let currentIndex = 0;
-const rotatorEl = document.getElementById('fx-rotator');
+    let liveRates = [];
+    let currentIndex = 0;
+    const rotatorEl = document.getElementById('fx-rotator');
 
-async function fetchLiveExchangeRates() {
-    try {
-        const response = await fetch('https://open.er-api.com/v6/latest/PHP');
-        const data = await response.json();
-        if (data && data.rates) {
-            const currencies = ['USD', 'EUR', 'JPY', 'GBP', 'SGD', 'AUD', 'CAD', 'CHF'];
-            liveRates = currencies.map(curr => {
-                if (data.rates[curr]) {
-                    let rateVal = (1 / data.rates[curr]).toFixed(4);
-                    return { symbol: `${curr}/PHP`, rate: `₱${rateVal}` };
+    async function fetchLiveExchangeRates() {
+        try {
+            const response = await fetch('https://open.er-api.com/v6/latest/PHP');
+            const data = await response.json();
+            if (data && data.rates) {
+                const currencies = ['USD', 'EUR', 'JPY', 'GBP', 'SGD', 'AUD', 'CAD', 'CHF'];
+                liveRates = currencies.map(curr => {
+                    if (data.rates[curr]) {
+                        let rateVal = (1 / data.rates[curr]).toFixed(4);
+                        return { symbol: `${curr}/PHP`, rate: `₱${rateVal}` };
+                    }
+                    return null;
+                }).filter(item => item !== null);
+                if (liveRates.length > 0) {
+                    displayNextRate();
+                    setInterval(displayNextRate, 4000);
                 }
-                return null;
-            }).filter(item => item !== null);
-            if (liveRates.length > 0) {
-                displayNextRate();
-                setInterval(displayNextRate, 4000);
             }
+        } catch (error) {
+            if (rotatorEl) rotatorEl.innerHTML = `<span class="text-gray-500">Hindi ma-load ang rates</span>`;
         }
-    } catch (error) {
-        rotatorEl.innerHTML = `<span class="text-gray-500">Hindi ma-load ang rates</span>`;
     }
-}
 
-function displayNextRate() {
-    if (liveRates.length > 0) {
-        let item = liveRates[currentIndex];
-        rotatorEl.style.opacity = 0;
-        setTimeout(() => {
-            rotatorEl.innerHTML = `<strong>${item.symbol}</strong>: <span class="text-gray-900 font-bold">${item.rate}</span>`;
-            rotatorEl.style.opacity = 1;
-        }, 300);
-        currentIndex = (currentIndex + 1) % liveRates.length;
+    function displayNextRate() {
+        if (liveRates.length > 0 && rotatorEl) {
+            let item = liveRates[currentIndex];
+            rotatorEl.style.opacity = 0;
+            setTimeout(() => {
+                rotatorEl.innerHTML = `<strong>${item.symbol}</strong>: <span class="text-gray-900 font-bold">${item.rate}</span>`;
+                rotatorEl.style.opacity = 1;
+            }, 300);
+            currentIndex = (currentIndex + 1) % liveRates.length;
+        }
     }
-}
 
-document.addEventListener("DOMContentLoaded", function () {
-    fetchLiveExchangeRates();
-});
+    document.addEventListener("DOMContentLoaded", function () {
+        fetchLiveExchangeRates();
+    });
 
     // FULLY DYNAMIC REAL-TIME WEATHER SCRIPT
     document.addEventListener("DOMContentLoaded", function () {
@@ -858,7 +956,7 @@ document.addEventListener("DOMContentLoaded", function () {
             fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&temperature_unit=celsius`)
                 .then(response => response.json())
                 .then(data => {
-                    if (data && data.current) {
+                    if (data && data.current && tempEl && weatherIconEl) {
                         const temp = Math.round(data.current.temperature_2m);
                         tempEl.textContent = `${temp}°C`;
 
@@ -879,7 +977,7 @@ document.addEventListener("DOMContentLoaded", function () {
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16&addressdetails=1`)
                 .then(response => response.json())
                 .then(geoData => {
-                    if (geoData && geoData.address) {
+                    if (geoData && geoData.address && locationEl) {
                         let suburb = geoData.address.suburb || geoData.address.neighbourhood || geoData.address.village || '';
                         let town = geoData.address.city || geoData.address.municipality || geoData.address.town || '';
                         
@@ -908,19 +1006,19 @@ document.addEventListener("DOMContentLoaded", function () {
                             .then(res => res.json())
                             .then(ipData => {
                                 if (ipData && ipData.latitude && ipData.longitude) {
-                                    locationEl.textContent = ipData.city || ipData.region;
+                                    if (locationEl) locationEl.textContent = ipData.city || ipData.region;
                                     fetchWeatherByCoords(ipData.latitude, ipData.longitude);
-                                } else {
+                                } else if (locationEl) {
                                     locationEl.textContent = "IP Location Unavailable";
                                 }
                             })
                             .catch(() => {
-                                locationEl.textContent = "Live Location Required";
+                                if (locationEl) locationEl.textContent = "Live Location Required";
                             });
                     }, 
                     { timeout: 12000, enableHighAccuracy: true, maximumAge: 0 }
                 );
-            } else {
+            } else if (locationEl) {
                 locationEl.textContent = "Geolocation Not Supported";
             }
         }
